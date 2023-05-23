@@ -1,16 +1,14 @@
 package main
 
 import (
-	"github.com/hashicorp/terraform-plugin-sdk/plugin"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-
+	"github.com/hashicorp/terraform-plugin-sdk/v2/plugin"
 	"github.com/theobori/terraform-provider-neuvector/neuvector"
 )
 
 func main() {
-	plugin.Serve(&plugin.ServeOpts{
-		ProviderFunc: func() terraform.ResourceProvider {
-			return neuvector.Provider()
-		},
-	})
+	opts := &plugin.ServeOpts{
+		ProviderFunc: neuvector.Provider,
+	}
+
+	plugin.Serve(opts)
 }
