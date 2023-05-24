@@ -20,7 +20,6 @@ BIN_PATH = $(BIN_DIR)/$(BIN)
 # Formatted Go files
 GOFMT_FILES ?= $(shell find . -name "*.go")
 
-
 default: install
 
 build:

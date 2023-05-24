@@ -15,7 +15,7 @@ var resourceAdmissionRuleSchema = map[string]*schema.Schema{
 	"rule_id": {
 		Type:        schema.TypeInt,
 		Optional:    true,
-		Description: "Admission rule ID",
+		Description: "Rule ID",
 		Default:     0,
 	},
 	"category": {
@@ -26,11 +26,12 @@ var resourceAdmissionRuleSchema = map[string]*schema.Schema{
 	"comment": {
 		Type:        schema.TypeString,
 		Optional:    true,
-		Description: "Comment",
+		Description: "Rul comment",
 	},
 	"criteria": {
 		Type:     schema.TypeSet,
 		Required: true,
+		Description: "Matching criteria applied associated with the rule",
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"name": {
@@ -73,14 +74,17 @@ var resourceAdmissionRuleSchema = map[string]*schema.Schema{
 		Type:     schema.TypeString,
 		Optional: true,
 		Default:  "user_created",
+		Description: "Configuration type",
 	},
 	"rule_type": {
 		Type:     schema.TypeString,
 		Required: true,
+		Description: "Rule type",
 	},
 	"rule_mode": {
 		Type:     schema.TypeString,
 		Optional: true,
+		Description: "Rule mode",
 	},
 }
 
@@ -141,14 +145,11 @@ func resourceAdmissionRuleUpdate(ctx context.Context, d *schema.ResourceData, me
 		return nil
 	}
 
-	if err := resourceAdmissionRuleDelete(ctx, d, meta); err != nil {
-		return err
+	if diag := resourceAdmissionRuleDelete(ctx, d, meta); diag != nil {
+		return diag
 	}
-	if err := resourceAdmissionRuleCreate(ctx, d, meta); err != nil {
-		return err
-	}
-
-	return nil
+	
+	return resourceAdmissionRuleCreate(ctx, d, meta)
 }
 
 func resourceAdmissionRuleDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

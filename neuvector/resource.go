@@ -42,26 +42,6 @@ func GetFieldNameFromJSON[T any](tag string) (string, error) {
 	return getFieldName[T](tag, "json")
 }
 
-// Returns the schame value as a pointer
-func getSchemaValuePtr(valueRaw any, s *schema.Schema) any {
-	switch s.Type {
-
-	case schema.TypeString:
-		return valueRaw.(*string)
-
-	case schema.TypeBool:
-		return valueRaw.(*bool)
-
-	case schema.TypeInt:
-		return valueRaw.(*int)
-
-	case schema.TypeFloat:
-		return valueRaw.(*float64)
-	}
-
-	return nil
-}
-
 // Get ptr value from interface{}
 func getValuePtr(valueRaw any) any {
 	vp := reflect.New(reflect.TypeOf(valueRaw))
@@ -89,6 +69,26 @@ func getFieldValue[T any](
 	return &field
 }
 
+func setFieldValue(field *reflect.Value, valueRaw any) bool {
+	switch field.Kind() {
+
+	case reflect.Array | reflect.Slice:
+		return false
+
+	case reflect.Ptr:
+		valuePtr := getValuePtr(valueRaw)
+
+		if valuePtr == nil {
+			return false
+		}
+
+	default:
+		field.Set(reflect.ValueOf(valueRaw))
+	}
+
+	return true
+}
+
 // Returns a struct `T` from a Terraform schema keys `schema` and `values`
 func FromSchemas[T any](
 	schemas map[string]*schema.Schema,
@@ -98,7 +98,7 @@ func FromSchemas[T any](
 
 	elem := reflect.ValueOf(&t).Elem()
 
-	for key, s := range schemas {
+	for key := range schemas {
 		valueRaw, ok := d.GetOk(key)
 
 		if valueRaw == nil || !ok {
@@ -111,18 +111,7 @@ func FromSchemas[T any](
 			continue
 		}
 
-		switch field.Kind() {
-		case reflect.Array | reflect.Slice:
-			continue
-		case reflect.Ptr:
-			valuePtr := getSchemaValuePtr(valueRaw, s)
-
-			if valuePtr == nil {
-				continue
-			}
-		default:
-			field.Set(reflect.ValueOf(valueRaw))
-		}
+		setFieldValue(field, valueRaw)
 	}
 
 	return elem.Interface().(T)
@@ -141,12 +130,7 @@ func FromMap[T any](m map[string]any) T {
 			continue
 		}
 
-		switch field.Kind() {
-		case reflect.Ptr:
-			getValuePtr(value)
-		default:
-			field.Set(reflect.ValueOf(value))
-		}
+		setFieldValue(field, value)
 	}
 
 	return elem.Interface().(T)
@@ -164,4 +148,22 @@ func FromTypeSet[T any](set []any) []T {
 	}
 
 	return t
+}
+
+// Return a slice from a `schema.TypeList` or `schema.TypeSet`
+func FromSlice[T any](slice []any) ([]T, error) {
+	var t []T
+
+	for _, value := range slice {
+
+		valueAssertion, ok := value.(T)
+
+		if !ok {
+			return []T{}, fmt.Errorf("unable to assert")
+		}
+
+		t = append(t, valueAssertion)
+	}
+
+	return t, nil
 }

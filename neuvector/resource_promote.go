@@ -1,4 +1,4 @@
-// resource_admission_rule.go
+// resource_promote.go
 package neuvector
 
 import (

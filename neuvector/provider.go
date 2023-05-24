@@ -38,6 +38,7 @@ func Provider() *schema.Provider {
 		ResourcesMap: map[string]*schema.Resource{
 			"neuvector_admission_rule": resourceAdmissionRule(),
 			"neuvector_promote": resourcePromote(),
+			"neuvector_registry": resourceRegistry(),
 		},
 	}
 
