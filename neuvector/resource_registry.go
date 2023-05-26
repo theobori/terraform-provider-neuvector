@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/theobori/go-neuvector/client"
 	"github.com/theobori/go-neuvector/controller/scan"
+	"github.com/theobori/terraform-provider-neuvector/helper"
 )
 
 var resourceRegistrySchema = map[string]*schema.Schema{
@@ -20,7 +21,6 @@ var resourceRegistrySchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "Registry type",
-		
 	},
 	"registry": {
 		Type:        schema.TypeString,
@@ -28,8 +28,8 @@ var resourceRegistrySchema = map[string]*schema.Schema{
 		Description: "Registry address",
 	},
 	"filters": {
-		Type:        schema.TypeList,
-		Required:    true,
+		Type:     schema.TypeList,
+		Required: true,
 		Elem: &schema.Schema{
 			Type: schema.TypeString,
 		},
@@ -39,37 +39,37 @@ var resourceRegistrySchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Registry username",
-		Sensitive: true,
+		Sensitive:   true,
 	},
 	"password": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Registry password",
-		Sensitive: true,
+		Sensitive:   true,
 	},
 	"auth_token": {
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Authentication token",
-		Sensitive: true,
+		Sensitive:   true,
 	},
 	"auth_with_token": {
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Description: "That said if you are going to authenticate to the registry with a token",
-		Default: false,
+		Default:     false,
 	},
 	"rescan_after_db_update": {
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Description: "Rescan after the CVE database update",
-		Default: true,
+		Default:     true,
 	},
 	"scan_layers": {
 		Type:        schema.TypeBool,
 		Optional:    true,
 		Description: "Scan the layers",
-		Default: false,
+		Default:     false,
 	},
 	"repo_limit": {
 		Type:        schema.TypeInt,
@@ -100,35 +100,65 @@ func resourceRegistry() *schema.Resource {
 	}
 }
 
-func resourceRegistryCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	APIClient := meta.(*client.Client)
-	
-	// Collecting filters
-	filtersRaw := d.Get("filters").([]any)
-	filters, err := FromSlice[string](filtersRaw)
+func readRegistry(d *schema.ResourceData) (*scan.CreateRegistryBody, error) {
+	var ret scan.CreateRegistryBody
 
-	body := FromSchemas[scan.CreateRegistryBody](
+	filtersRaw := d.Get("filters").([]any)
+	filters, err := helper.FromSlice[string](filtersRaw)
+
+	if err != nil {
+		return &ret, err
+	}
+
+	ret = helper.FromSchemas[scan.CreateRegistryBody](
 		resourceRegistrySchema,
 		d,
 	)
+
+	ret.Filters = filters
+	
+	return &ret, nil
+}
+
+func resourceRegistryCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	APIClient := meta.(*client.Client)
+
+	body, err := readRegistry(d)
 
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	body.Filters = filters
-
 	scan.CreateRegistry(
 		APIClient,
-		body,
+		*body,
 	)
 
 	d.SetId(body.Name)
-	
-	return nil
+
+	return resourceRegistryRead(ctx, d, meta)
 }
 
 func resourceRegistryUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	APIClient := meta.(*client.Client)
+
+	if d.HasChanges(
+		"name",
+		"registry_type",
+	){
+		return diag.Errorf("You are not allowed to change the registry name and type.")
+	}
+
+	body, err := readRegistry(d)
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	if err := scan.PatchRegistry(APIClient, *body, body.Name); err != nil {
+		return diag.FromErr(err)
+	}
+	
 	return nil
 }
 
@@ -136,12 +166,12 @@ func resourceRegistryRead(_ context.Context, d *schema.ResourceData, meta any) d
 	return nil
 }
 
-func resourceRegistryDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceRegistryDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	APIClient := meta.(*client.Client)
-	
+
 	if err := scan.DeleteRegistry(APIClient, d.Id()); err != nil {
 		return diag.FromErr(err)
 	}
-	
+
 	return nil
 }

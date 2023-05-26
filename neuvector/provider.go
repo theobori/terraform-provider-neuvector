@@ -15,30 +15,31 @@ func Provider() *schema.Provider {
 			"username": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "NeuVector username",
+				Description: "Represents the NeuVector username.",
 			},
 			"password": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "NeuVector password",
+				Description: "Represents the NeuVector password.",
 			},
 			"base_url": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "NeuVector Controller REST API base url",
+				Description: "Represents the NeuVector Controller REST API base url.",
 			},
 			"insecure": {
 				Type:        schema.TypeBool,
 				Optional:    true,
 				Default:     true,
-				Description: "Skip the TLS verification. Default: `true`",
+				Description: "Skip the TLS verification. Default: `true`.",
 			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{},
 		ResourcesMap: map[string]*schema.Resource{
 			"neuvector_admission_rule": resourceAdmissionRule(),
-			"neuvector_promote": resourcePromote(),
-			"neuvector_registry": resourceRegistry(),
+			"neuvector_promote":        resourcePromote(),
+			"neuvector_registry":       resourceRegistry(),
+			"neuvector_policy":         resourcePolicy(),
 		},
 	}
 

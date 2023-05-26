@@ -1,4 +1,4 @@
-package neuvector
+package helper
 
 import (
 	"fmt"
@@ -43,10 +43,12 @@ func GetFieldNameFromJSON[T any](tag string) (string, error) {
 }
 
 // Get ptr value from interface{}
-func getValuePtr(valueRaw any) any {
-	vp := reflect.New(reflect.TypeOf(valueRaw))
+func GetValuePtr(valueRaw any) any {
+	p := reflect.New(reflect.TypeOf(valueRaw))
 
-	return vp.Interface()
+	p.Elem().Set(reflect.ValueOf(valueRaw))
+
+	return p.Interface()
 }
 
 // Return the field as a `reflect.Value` if it is mutable and valid
@@ -69,22 +71,29 @@ func getFieldValue[T any](
 	return &field
 }
 
+// Assign a value to `field`
 func setFieldValue(field *reflect.Value, valueRaw any) bool {
+	var value any
+
 	switch field.Kind() {
 
 	case reflect.Array | reflect.Slice:
 		return false
 
 	case reflect.Ptr:
-		valuePtr := getValuePtr(valueRaw)
+		valuePtr := GetValuePtr(valueRaw)
 
 		if valuePtr == nil {
 			return false
 		}
 
+		value = valuePtr
+
 	default:
-		field.Set(reflect.ValueOf(valueRaw))
+		value = valueRaw
 	}
+
+	field.Set(reflect.ValueOf(value))
 
 	return true
 }
@@ -137,17 +146,35 @@ func FromMap[T any](m map[string]any) T {
 }
 
 // Only for `schema.TypeSet` with `schema.Resource`
-func FromTypeSet[T any](set []any) []T {
+func FromTypeSetCallback[T any](
+	set []any,
+	f func(map[string]any) (*T, error),
+) []T {
 	var t []T
 
 	for _, mapRaw := range set {
 		_map := mapRaw.(map[string]any)
-		value := FromMap[T](_map)
+		value, err := f(_map)
 
-		t = append(t, value)
+		if err != nil {
+			continue
+		}
+
+		t = append(t, *value)
 	}
 
 	return t
+}
+
+// Only for `schema.TypeSet` with `schema.Resource`
+func FromTypeSetDefault[T any](set []any) []T {
+	return FromTypeSetCallback(
+		set, func(m map[string]any) (*T, error) {
+			ret := FromMap[T](m)
+
+			return &ret, nil
+		},
+	)
 }
 
 // Return a slice from a `schema.TypeList` or `schema.TypeSet`
@@ -155,7 +182,6 @@ func FromSlice[T any](slice []any) ([]T, error) {
 	var t []T
 
 	for _, value := range slice {
-
 		valueAssertion, ok := value.(T)
 
 		if !ok {

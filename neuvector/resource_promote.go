@@ -1,4 +1,4 @@
-// resource_promote.go
+// resource_promoteT.go
 package neuvector
 
 import (
@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/theobori/go-neuvector/client"
 	"github.com/theobori/go-neuvector/controller/federation"
+	"github.com/theobori/terraform-provider-neuvector/helper"
 )
 
 var resourcePromoteSchema = map[string]*schema.Schema{
@@ -46,12 +47,12 @@ func resourcePromote() *schema.Resource {
 
 func resourcePromoteCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	APIClient := meta.(*client.Client)
-	
-	masterRestInfo := FromSchemas[federation.MasterRestInfo](
+
+	masterRestInfo := helper.FromSchemas[federation.MasterRestInfo](
 		resourcePromoteSchema,
 		d,
 	)
-	body := FromSchemas[federation.FederationMetadata](
+	body := helper.FromSchemas[federation.FederationMetadata](
 		resourcePromoteSchema,
 		d,
 	)
@@ -63,8 +64,8 @@ func resourcePromoteCreate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	d.SetId(body.Name)
-	
-	return nil
+
+	return resourcePromoteRead(ctx, d, meta)
 }
 
 func resourcePromoteUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -75,12 +76,12 @@ func resourcePromoteRead(_ context.Context, d *schema.ResourceData, meta any) di
 	return nil
 }
 
-func resourcePromoteDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourcePromoteDelete(_ context.Context, _ *schema.ResourceData, meta any) diag.Diagnostics {
 	APIClient := meta.(*client.Client)
-	
+
 	if err := federation.Demote(APIClient); err != nil {
 		return diag.FromErr(err)
 	}
-	
+
 	return nil
 }
