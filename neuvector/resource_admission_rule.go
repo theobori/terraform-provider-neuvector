@@ -36,38 +36,38 @@ var resourceAdmissionRuleSchema = map[string]*schema.Schema{
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"name": {
-					Type:     schema.TypeString,
-					Required: true,
+					Type:        schema.TypeString,
+					Required:    true,
 					Description: "Represents the identifier or label for the criteria.",
 				},
 				"op": {
-					Type:     schema.TypeString,
-					Required: true,
+					Type:        schema.TypeString,
+					Required:    true,
 					Description: "Represents a comparison operator used to evaluate the rule criteria. It defines the relationship between the specified value and the actual value being checked against. Examples of common operators include equals (=), not equals (!=), greater than (>), less than (<), etc.",
 				},
 				"value": {
-					Type:     schema.TypeString,
-					Required: true,
+					Type:        schema.TypeString,
+					Required:    true,
 					Description: "Represents the reference value against which the actual value is compared using the specified operator.",
 				},
 				"type": {
-					Type:     schema.TypeString,
-					Optional: true,
+					Type:        schema.TypeString,
+					Optional:    true,
 					Description: "The type field defines the category or nature of the admission rule criteria. It helps determine the context and behavior of the criteria.",
 				},
 				"template_kind": {
-					Type:     schema.TypeString,
-					Optional: true,
+					Type:        schema.TypeString,
+					Optional:    true,
 					Description: "identifies the type or category of the admission rule template associated with the criteria.",
 				},
 				"path": {
-					Type:     schema.TypeString,
-					Optional: true,
+					Type:        schema.TypeString,
+					Optional:    true,
 					Description: "Specifies the location or attribute within the relevant resource or object that the admission rule criteria should be applied to.",
 				},
 				"value_type": {
-					Type:     schema.TypeString,
-					Optional: true,
+					Type:        schema.TypeString,
+					Optional:    true,
 					Description: "Indicates the data type of the actual value being checked against the rule criteria.",
 				},
 			},

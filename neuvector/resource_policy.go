@@ -45,17 +45,17 @@ var resourcePolicyRuleSchema = map[string]*schema.Schema{
 		Description: "Action when this policy is triggered.",
 	},
 	"applications": {
-		Type:        schema.TypeList,
-		Required:    true,
+		Type:     schema.TypeList,
+		Required: true,
 		Elem: &schema.Schema{
 			Type: schema.TypeString,
 		},
 		Description: "Enter applications for NeuVector to allow or deny. NeuVector understands deep application behavior and will analyze the payload to determine application protocols. Protocols include HTTP, HTTPS, SSL, SSH, DNS, DNCP, NTP, TFTP, ECHO, RTSP, SIP, MySQL, Redis, Zookeeper, Cassandra, MongoDB, PostgresSQL, Kafka, Couchbase, ActiveMQ, ElasticSearch, RabbitMQ, Radius, VoltDB, Consul, Syslog, Etcd, Spark, Apache, Nginx, Jetty, NodeJS, Oracle, MSSQL, Memcached and gRPC. To select everything enter \"any\"",
 	},
 	"learned": {
-		Type:     schema.TypeBool,
-		Optional: true,
-		Default:  false,
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Default:     false,
 		Description: "Indicates if the rules has been learned.",
 	},
 	"disable": {
@@ -65,9 +65,9 @@ var resourcePolicyRuleSchema = map[string]*schema.Schema{
 		Description: "Disable the policy.",
 	},
 	"priority": {
-		Type:     schema.TypeInt,
-		Optional: true,
-		Default:  0,
+		Type:        schema.TypeInt,
+		Optional:    true,
+		Default:     0,
 		Description: "The rule priority level.",
 	},
 	"cfg_type": {
@@ -145,15 +145,15 @@ func NewPolicyRuleSet(rules *[]policy.PolicyRule) ([]map[string]any, error) {
 				return nil, nil
 			}
 
-		// Renaming the "id" field to "policy_id"
-		ret["policy_id"] = ret["id"]
-		
-		// Removing fields that are not in the Resource
-		delete(ret, "id")
-		delete(ret, "last_modified_timestamp")
-		delete(ret, "created_timestamp")
+			// Renaming the "id" field to "policy_id"
+			ret["policy_id"] = ret["id"]
 
-		return ret, nil
+			// Removing fields that are not in the Resource
+			delete(ret, "id")
+			delete(ret, "last_modified_timestamp")
+			delete(ret, "created_timestamp")
+
+			return ret, nil
 		},
 	)
 }
@@ -187,7 +187,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	policyIDs, err := policy.GetPolicyAvailableIDs(
 		APIClient,
-		policy.PolicyMinimumID + 1,
+		policy.PolicyMinimumID+1,
 		policy.PolicyMaximumID,
 		len(indexes),
 	)
@@ -199,7 +199,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	for i, index := range indexes {
 		body.Rules[index].ID = policyIDs[i]
 	}
-	
+
 	if err = policy.PatchPolicy(APIClient, body); err != nil {
 		return diag.FromErr(err)
 	}
@@ -230,13 +230,13 @@ func resourcePolicyDelete(_ context.Context, d *schema.ResourceData, meta any) d
 
 	APIClient := meta.(*client.Client)
 
-	// Magic trick 
+	// Magic trick
 	//
 	// NeuVector itself can identifies policy rules
 	// with other fields than the unique ID. When we create a policy, NeuVector will check if
 	// another one has the same behavior, if yes if will patch it instead of creating a new one.
 	// We cannot retrieve the dynamics IDS injected into the HTTP body at the creation.
-	// 
+	//
 	// So we are going to get every policies, then we will get the
 	// dynamically created IDs by comparing the unique fields:
 	// "from", "to", "ports", "applications", "learned", etc..

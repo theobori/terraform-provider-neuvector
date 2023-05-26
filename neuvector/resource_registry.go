@@ -116,7 +116,7 @@ func readRegistry(d *schema.ResourceData) (*scan.CreateRegistryBody, error) {
 	)
 
 	ret.Filters = filters
-	
+
 	return &ret, nil
 }
 
@@ -145,7 +145,7 @@ func resourceRegistryUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	if d.HasChanges(
 		"name",
 		"registry_type",
-	){
+	) {
 		return diag.Errorf("You are not allowed to change the registry name and type.")
 	}
 
@@ -158,7 +158,7 @@ func resourceRegistryUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	if err := scan.PatchRegistry(APIClient, *body, body.Name); err != nil {
 		return diag.FromErr(err)
 	}
-	
+
 	return nil
 }
 
