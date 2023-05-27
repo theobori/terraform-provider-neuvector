@@ -1,4 +1,4 @@
-package neuvector
+package provider
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/theobori/go-neuvector/client"
+	"github.com/theobori/terraform-provider-neuvector/internal/resources/neuvector"
 )
 
 // Provider returns a *schema.Provider.
@@ -34,12 +35,19 @@ func Provider() *schema.Provider {
 				Description: "Skip the TLS verification. Default: `true`.",
 			},
 		},
-		DataSourcesMap: map[string]*schema.Resource{},
+
 		ResourcesMap: map[string]*schema.Resource{
-			"neuvector_admission_rule": resourceAdmissionRule(),
-			"neuvector_promote":        resourcePromote(),
-			"neuvector_registry":       resourceRegistry(),
-			"neuvector_policy":         resourcePolicy(),
+			// neuvector
+			"neuvector_admission_rule": neuvector.ResourceAdmissionRule(),
+			"neuvector_promote":        neuvector.ResourcePromote(),
+			"neuvector_registry":       neuvector.ResourceRegistry(),
+			"neuvector_policy":         neuvector.ResourcePolicy(),
+		},
+
+		DataSourcesMap: map[string]*schema.Resource{
+			// neuvector
+			"neuvector_registry": neuvector.DataSourceRegistry(),
+			"neuvector_registry_names": neuvector.DataSourceRegistryNames(),
 		},
 	}
 

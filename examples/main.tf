@@ -1,36 +1,59 @@
-resource "neuvector_admission_rule" "container_prevention" {
-  rule_type = "deny"
-  category  = "Docker"
-  comment   = "Containers prevention"
+# resource "neuvector_admission_rule" "container_prevention" {
+#   rule_type = "deny"
+#   category  = "Docker"
+#   comment   = "Containers prevention"
 
-  criteria {
-    name  = "runAsRoot"
-    op    = "="
-    path  = "runAsRoot"
-    value = "true"
-  }
+#   criteria {
+#     name  = "runAsRoot"
+#     op    = "="
+#     path  = "runAsRoot"
+#     value = "true"
+#   }
 
-  criteria {
-    name  = "runAsPrivileged"
-    op    = "="
-    path  = "runAsPrivileged"
-    value = "true"
-  }
+#   criteria {
+#     name  = "runAsPrivileged"
+#     op    = "="
+#     path  = "runAsPrivileged"
+#     value = "true"
+#   }
 
-  disable = false
-}
+#   disable = false
+# }
 
-resource "neuvector_registry" "docker_registry" {
-  name                   = "docker.io"
-  registry_type          = "Docker Registry"
-  username               = "tes12"
-  password               = "test12"
-  filters                = ["neuvector/*"]
-  registry               = "https://registry.hub.docker.com/"
-  rescan_after_db_update = true
-  auth_with_token        = false
-  scan_layers            = true
-}
+# resource "neuvector_registry" "docker" {
+#   name                   = "docker.io"
+#   registry_type          = "Docker Registry"
+#   username               = "tes12"
+#   password               = "test12"
+#   filters                = ["neuvector/*"]
+#   registry               = "https://registry.hub.docker.com/"
+#   rescan_after_db_update = true
+#   auth_with_token        = false
+#   scan_layers            = true
+# }
+
+# data "neuvector_registry" "docker_metadata" {
+#   name = "docker.io"
+# }
+
+# data "neuvector_registry_names" "registries" {
+#   registry_type = "Dockker Registry"
+# }
+
+# data "neuvector_registry_names" "regiskkkktries" {
+#   registry_type = "Docker Registry"
+# }
+
+# data "neuvector_registry_names" "regisaaatries" {
+# }
+
+# data "neuvector_registry" "docker_metadata" {
+#   name = resource.neuvector_registry.docker.name
+
+#   depends_on = [
+#     resource.neuvector_registry.docker
+#   ]
+# }
 
 resource "neuvector_policy" "basic_preventions" {
   rule {
@@ -75,7 +98,7 @@ resource "neuvector_policy" "basic_preventions" {
 
 #   depends_on = [
 #     neuvector_admission_rule.container_prevention,
-#     neuvector_registry.docker_registry,
+#     neuvector_registry.docker,
 #     neuneuvector_policy.basic_preventions
 #   ]
 # }

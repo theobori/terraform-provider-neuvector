@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/theobori/go-neuvector/client"
 	"github.com/theobori/go-neuvector/controller/policy"
-	"github.com/theobori/terraform-provider-neuvector/helper"
+	"github.com/theobori/terraform-provider-neuvector/internal/helper"
 )
 
 var resourcePolicyRuleSchema = map[string]*schema.Schema{
@@ -45,11 +45,9 @@ var resourcePolicyRuleSchema = map[string]*schema.Schema{
 		Description: "Action when this policy is triggered.",
 	},
 	"applications": {
-		Type:     schema.TypeList,
-		Required: true,
-		Elem: &schema.Schema{
-			Type: schema.TypeString,
-		},
+		Type:        schema.TypeList,
+		Required:    true,
+		Elem:        &schema.Schema{Type: schema.TypeString},
 		Description: "Enter applications for NeuVector to allow or deny. NeuVector understands deep application behavior and will analyze the payload to determine application protocols. Protocols include HTTP, HTTPS, SSL, SSH, DNS, DNCP, NTP, TFTP, ECHO, RTSP, SIP, MySQL, Redis, Zookeeper, Cassandra, MongoDB, PostgresSQL, Kafka, Couchbase, ActiveMQ, ElasticSearch, RabbitMQ, Radius, VoltDB, Consul, Syslog, Etcd, Spark, Apache, Nginx, Jetty, NodeJS, Oracle, MSSQL, Memcached and gRPC. To select everything enter \"any\"",
 	},
 	"learned": {
@@ -123,7 +121,7 @@ var resourcePolicySchema = map[string]*schema.Schema{
 	},
 }
 
-func resourcePolicy() *schema.Resource {
+func ResourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourcePolicyCreate,
 		ReadContext:   resourcePolicyRead,
@@ -132,30 +130,6 @@ func resourcePolicy() *schema.Resource {
 
 		Schema: resourcePolicySchema,
 	}
-}
-
-// Returns a composed set for policies
-func NewPolicyRuleSet(rules *[]policy.PolicyRule) ([]map[string]any, error) {
-	return helper.NewSetCallback(
-		rules,
-		func(s any) (map[string]any, error) {
-			ret, err := helper.StructToMap(s)
-
-			if err != nil {
-				return nil, nil
-			}
-
-			// Renaming the "id" field to "policy_id"
-			ret["policy_id"] = ret["id"]
-
-			// Removing fields that are not in the Resource
-			delete(ret, "id")
-			delete(ret, "last_modified_timestamp")
-			delete(ret, "created_timestamp")
-
-			return ret, nil
-		},
-	)
 }
 
 // Return the indexes of the dynamic policies
@@ -185,6 +159,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	// Used to determinate the amount of need available index
 	indexes := getDynamicPolicyIndexes(&body.Rules)
 
+	// Get every available policy IDs
 	policyIDs, err := policy.GetPolicyAvailableIDs(
 		APIClient,
 		policy.PolicyMinimumID+1,
@@ -196,6 +171,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		return diag.FromErr(err)
 	}
 
+	// Updating the body with the new IDs if needed
 	for i, index := range indexes {
 		body.Rules[index].ID = policyIDs[i]
 	}

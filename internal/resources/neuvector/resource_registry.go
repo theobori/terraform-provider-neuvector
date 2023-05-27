@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/theobori/go-neuvector/client"
 	"github.com/theobori/go-neuvector/controller/scan"
-	"github.com/theobori/terraform-provider-neuvector/helper"
+	"github.com/theobori/terraform-provider-neuvector/internal/helper"
 )
 
 var resourceRegistrySchema = map[string]*schema.Schema{
@@ -28,11 +28,9 @@ var resourceRegistrySchema = map[string]*schema.Schema{
 		Description: "Registry address",
 	},
 	"filters": {
-		Type:     schema.TypeList,
-		Required: true,
-		Elem: &schema.Schema{
-			Type: schema.TypeString,
-		},
+		Type:        schema.TypeList,
+		Required:    true,
+		Elem:        &schema.Schema{Type: schema.TypeString},
 		Description: "Filters string list",
 	},
 	"username": {
@@ -86,10 +84,9 @@ var resourceRegistrySchema = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Configuration type",
 	},
-	// TODO: External services configuration
 }
 
-func resourceRegistry() *schema.Resource {
+func ResourceRegistry() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceRegistryCreate,
 		ReadContext:   resourceRegistryRead,

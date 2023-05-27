@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/theobori/go-neuvector/client"
 	"github.com/theobori/go-neuvector/controller/federation"
-	"github.com/theobori/terraform-provider-neuvector/helper"
+	"github.com/theobori/terraform-provider-neuvector/internal/helper"
 )
 
 var resourcePromoteSchema = map[string]*schema.Schema{
@@ -34,7 +34,7 @@ var resourcePromoteSchema = map[string]*schema.Schema{
 	},
 }
 
-func resourcePromote() *schema.Resource {
+func ResourcePromote() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourcePromoteCreate,
 		ReadContext:   resourcePromoteRead,

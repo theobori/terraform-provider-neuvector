@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/theobori/go-neuvector/client"
 	"github.com/theobori/go-neuvector/controller/admission"
-	"github.com/theobori/terraform-provider-neuvector/helper"
+	"github.com/theobori/terraform-provider-neuvector/internal/helper"
 )
 
 var resourceAdmissionRuleSchema = map[string]*schema.Schema{
@@ -96,7 +96,7 @@ var resourceAdmissionRuleSchema = map[string]*schema.Schema{
 	},
 }
 
-func resourceAdmissionRule() *schema.Resource {
+func ResourceAdmissionRule() *schema.Resource {
 	return &schema.Resource{
 		CreateContext: resourceAdmissionRuleCreate,
 		ReadContext:   resourceAdmissionRuleRead,
