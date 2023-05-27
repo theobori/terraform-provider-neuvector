@@ -126,17 +126,16 @@ func resourceRegistryCreate(ctx context.Context, d *schema.ResourceData, meta an
 		return diag.FromErr(err)
 	}
 
-	scan.CreateRegistry(
-		APIClient,
-		*body,
-	)
+	if err := scan.CreateRegistry(APIClient, *body); err != nil {
+		return diag.FromErr(err)
+	}
 
 	d.SetId(body.Name)
 
 	return resourceRegistryRead(ctx, d, meta)
 }
 
-func resourceRegistryUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceRegistryUpdate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	APIClient := meta.(*client.Client)
 
 	if d.HasChanges(

@@ -55,6 +55,13 @@
 #   ]
 # }
 
+# data "neuvector_policy_ids" "containers" {
+#   from = "containers"
+#   to = "containers"
+#   ports = "any"
+#   applications = [ "HTTP", "MySQL" ]
+# }
+
 resource "neuvector_policy" "basic_preventions" {
   rule {
     action       = "deny"
@@ -88,6 +95,23 @@ resource "neuvector_policy" "basic_preventions" {
     ports        = "any"
     priority     = 0
   }
+}
+
+resource "neuvector_policy" "federation_network" {
+  rules_scope = "federal"
+  rule {
+    action       = "deny"
+    applications = ["any"]
+    comment      = "Containers constraints"
+    disable      = false
+    from         = "fed.containers"
+    to           = "fed.containers"
+    learned      = false
+    ports        = "any"
+    priority     = 0
+    cfg_type = "federal"
+  }
+
 }
 
 # resource "neuvector_promote" "promote_server" {

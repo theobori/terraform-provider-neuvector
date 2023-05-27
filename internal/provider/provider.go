@@ -46,8 +46,9 @@ func Provider() *schema.Provider {
 
 		DataSourcesMap: map[string]*schema.Resource{
 			// neuvector
-			"neuvector_registry": neuvector.DataSourceRegistry(),
+			"neuvector_registry":       neuvector.DataSourceRegistry(),
 			"neuvector_registry_names": neuvector.DataSourceRegistryNames(),
+			"neuvector_policy_ids":     neuvector.DataSourcePolicyIDs(),
 		},
 	}
 

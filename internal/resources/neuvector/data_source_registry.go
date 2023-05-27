@@ -42,6 +42,7 @@ var dataRegistrySchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Description: "Authentication token.",
 		Computed:    true,
+		Sensitive:   true,
 	},
 	"auth_with_token": {
 		Type:        schema.TypeBool,
@@ -195,11 +196,10 @@ func dataSourceRegistryRead(_ context.Context, d *schema.ResourceData, meta any)
 
 	registry := registrySummary.Registry
 
-	
 	if err := helper.ResourceFromStruct(registry, d); err != nil {
 		return diag.FromErr(err)
 	}
-	
+
 	d.SetId(registry.Name)
 	d.Set("filters", registry.Filters)
 

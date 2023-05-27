@@ -193,3 +193,56 @@ func FromSlice[T any](slice []any) ([]T, error) {
 
 	return t, nil
 }
+
+// JSON generic type
+type JSON = map[string]any
+
+// Returns if a JSON field has a different
+// value than the corresponding struct field
+func DiffField[T any](sValue reflect.Value, k string, v any) (bool, error) {
+	sFieldName, err := GetFieldNameFromJSON[T](k)
+
+	if err != nil {
+		return false, fmt.Errorf("field is not in the struct")
+	}
+
+	sFieldValue := sValue.FieldByName(sFieldName)
+
+	return reflect.DeepEqual(v, sFieldValue.Interface()), nil
+}
+
+// Used for data sources, it checks for
+// the same JSON fields if it has the same value.
+// It doesn't take care of the missing field.
+// Only the one that are in the struct.
+func StructHasResource[T any](
+	s any,
+	schemas map[string]*schema.Schema,
+	d *schema.ResourceData,
+) (bool, error) {
+	if !isStruct(s) {
+		return false, fmt.Errorf("must be a struct")
+	}
+
+	sValue := reflect.ValueOf(s)
+
+	for k := range schemas {
+		v, ok := d.GetOk(k)
+
+		if !ok {
+			continue
+		}
+
+		isEqual, err := DiffField[T](sValue, k, v)
+
+		if err != nil {
+			continue
+		}
+
+		if !isEqual {
+			return false, nil
+		}
+	}
+
+	return true, nil
+}

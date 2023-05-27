@@ -13,7 +13,7 @@ import (
 var dataRegistryNamesSchema = map[string]*schema.Schema{
 	"names": {
 		Type:        schema.TypeSet,
-		Description: "List of all register names.",
+		Description: "List of every register name.",
 		Computed:    true,
 		Elem:        &schema.Schema{Type: schema.TypeString},
 	},
@@ -33,7 +33,7 @@ func DataSourceRegistryNames() *schema.Resource {
 
 func dataSourceRegistryNamesRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var names []string
-	
+
 	APIClient := meta.(*client.Client)
 
 	registriesSummaries, err := scan.GetRegistries(APIClient)
@@ -52,11 +52,11 @@ func dataSourceRegistryNamesRead(_ context.Context, d *schema.ResourceData, meta
 	}
 
 	id, err := uuid.GenerateUUID()
-	
+
 	if err != nil {
 		return diag.FromErr(err)
 	}
-	
+
 	d.SetId(id)
 	d.Set("names", names)
 
