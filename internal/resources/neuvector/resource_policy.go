@@ -220,7 +220,7 @@ func patchPolicy(body *policy.PatchPolicyBody, APIClient *client.Client, scopeNa
 	return params.patchFunc(APIClient, *body)
 }
 
-func createPolicy(d *schema.ResourceData, meta any) error {
+func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var err error
 
 	APIClient := meta.(*client.Client)
@@ -237,7 +237,7 @@ func createPolicy(d *schema.ResourceData, meta any) error {
 	)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	// Random resource ID because this one doesnt have a specific ID
@@ -245,18 +245,10 @@ func createPolicy(d *schema.ResourceData, meta any) error {
 	id, err := uuid.GenerateUUID()
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	d.SetId(id)
-	
-	return nil
-}
-
-func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	if err := createPolicy(d, meta); err != nil {
-		return diag.FromErr(err)
-	}
 
 	return resourcePolicyRead(ctx, d, meta)
 }

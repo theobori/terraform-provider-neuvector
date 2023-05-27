@@ -113,7 +113,6 @@ func resourceAdmissionRuleCreate(ctx context.Context, d *schema.ResourceData, me
 	criteriasRaw := d.Get("criteria").(*schema.Set).List()
 	criterias := helper.FromTypeSetDefault[admission.AdmissionRuleCriterion](criteriasRaw)
 
-	// Injecting Terraform data into a struct used as HTTP request body
 	body := helper.FromSchemas[admission.CreateAdmissionRuleBody](
 		resourceAdmissionRuleSchema,
 		d,

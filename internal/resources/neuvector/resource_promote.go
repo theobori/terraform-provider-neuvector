@@ -15,22 +15,22 @@ var resourcePromoteSchema = map[string]*schema.Schema{
 	"server": {
 		Type:        schema.TypeString,
 		Required:    true,
-		Description: "Server address",
+		Description: "Server address.",
 	},
 	"port": {
 		Type:        schema.TypeInt,
 		Required:    true,
-		Description: "Controller federation manager port, usually `11443`",
+		Description: "Controller federation manager port, usually `11443`.",
 	},
 	"name": {
 		Type:        schema.TypeString,
 		Required:    true,
-		Description: "Cluster name",
+		Description: "Cluster name.",
 	},
 	"user": {
 		Type:        schema.TypeString,
 		Required:    true,
-		Description: "Username",
+		Description: "Username.",
 	},
 }
 
