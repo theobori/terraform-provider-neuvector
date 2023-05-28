@@ -15,17 +15,20 @@ func Provider() *schema.Provider {
 		Schema: map[string]*schema.Schema{
 			"username": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("NEUVECTOR_PUSERNAME", client.DefaultUsername),
 				Description: "Represents the NeuVector username.",
 			},
 			"password": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("NEUVECTOR_PASSWORD", client.DefaultPassword),
 				Description: "Represents the NeuVector password.",
 			},
 			"base_url": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("NEUVECTOR_BASE_URL", client.DefaultBaseUrl),
 				Description: "Represents the NeuVector Controller REST API base url.",
 			},
 			"insecure": {

@@ -1,6 +1,6 @@
-resource "neuvector_admission_rule" "foo" {
+resource "neuvector_admission_rule" "test" {
   rule_type = "deny"
-  category  = "Docker"
+  category  = "Kubernetes"
   comment   = "Containers prevention"
 
   criteria {
@@ -16,4 +16,6 @@ resource "neuvector_admission_rule" "foo" {
     path  = "runAsPrivileged"
     value = "true"
   }
+
+  disable = false
 }

@@ -1,6 +1,5 @@
 # Provider metadata and versionning
 PROVIDER = neuvector
-VERSION = $(shell git describe --tags --always)
 
 # Terraform metadata for installation
 BIN = terraform-provider-$(PROVIDER)
@@ -28,6 +27,12 @@ build:
 fmt:
 	gofmt -w $(GOFMT_FILES)
 
+neuvector:
+	docker-compose up -d
+
+testacc: clean_test
+	TF_ACC=1 go test -v ./...
+
 clean_test:
 	go clean -testcache
 
@@ -51,6 +56,8 @@ re: fclean build install
 	install \
 	uninstall \
 	fmt \
+	testacc \
+	neuvector \
 	clean_test \
 	clean \
 	re

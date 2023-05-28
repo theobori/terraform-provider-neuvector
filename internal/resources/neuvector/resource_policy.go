@@ -3,24 +3,34 @@ package neuvector
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/theobori/go-neuvector/client"
 	"github.com/theobori/go-neuvector/controller/policy"
+	"github.com/theobori/go-neuvector/util"
 	"github.com/theobori/terraform-provider-neuvector/internal/helper"
 )
 
-// Default scope
-const DefaultScope = "user_created"
+const (
+	// Specified ID when we want to create a dynamic policy ID
+	//
+	// In the resource creation process, we will first get every policies IDs from NeuVector,
+	// then we will use these IDs for find the available ones in the "user_created" range.
+	// We only get the needed amount.
+	DynamicPolicyID = -1
+	// Default scope
+	DefaultScope = "user_created"
+)
 
 var resourcePolicyRuleSchema = map[string]*schema.Schema{
 	"policy_id": {
 		Type:        schema.TypeInt,
 		Optional:    true,
 		Description: "Dont use this field if you want to generate a new ID.",
-		Default:     -1,
+		Default:     DynamicPolicyID,
 	},
 	"comment": {
 		Type:        schema.TypeString,
@@ -79,13 +89,6 @@ var resourcePolicyRuleSchema = map[string]*schema.Schema{
 	},
 }
 
-// Specified ID when we want to create a dynamic policy ID
-//
-// In the resource creation process, we will first get every policies IDs from NeuVector,
-// then we will use these IDs for find the available ones in the "user_created" range.
-// We only get the needed amount.
-const DynamicPolicyID = -1
-
 // Read a policy rule
 func readPolicyRule(_map map[string]any) (*policy.PolicyRule, error) {
 	policy := helper.FromMap[policy.PolicyRule](_map)
@@ -117,7 +120,7 @@ var resourcePolicySchema = map[string]*schema.Schema{
 	"rule": {
 		Type:        schema.TypeSet,
 		Required:    true,
-		Description: "Matching criteria applied associated with the rule",
+		Description: "Matching criteria applied associated with the rule.",
 		Elem: &schema.Resource{
 			Schema: resourcePolicyRuleSchema,
 		},
@@ -126,7 +129,13 @@ var resourcePolicySchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Scope applied to every rules, it helps definin the url.",
-		Default: DefaultScope,
+		Default:     DefaultScope,
+	},
+	"policy_ids": {
+		Type:        schema.TypeSet,
+		Computed:    true,
+		Description: "Contains every policy ID including the dynamic ones.",
+		Elem:        &schema.Schema{Type: schema.TypeInt},
 	},
 }
 
@@ -136,13 +145,16 @@ func ResourcePolicy() *schema.Resource {
 		ReadContext:   resourcePolicyRead,
 		DeleteContext: resourcePolicyDelete,
 		UpdateContext: resourcePolicyUpdate,
+		Importer: &schema.ResourceImporter{
+			StateContext: resourcePolicyImport,
+		},
 
 		Schema: resourcePolicySchema,
 	}
 }
 
 // Return the indexes of the dynamic policies
-func getDynamicPolicyIndexes(policies *[]policy.PolicyRule) []int {
+func GetDynamicPolicyIndexes(policies *[]policy.PolicyRule) []int {
 	ret := []int{}
 
 	for i, p := range *policies {
@@ -156,24 +168,20 @@ func getDynamicPolicyIndexes(policies *[]policy.PolicyRule) []int {
 
 // Stores the changing parameters between the differents scopes
 type ScopeChanges struct {
-	minID int
-	maxID int
-	patchFunc func(
-		client *client.Client,
-		body policy.PatchPolicyBody,
-	) error
-	
+	minID     int
+	maxID     int
+	patchFunc func(client *client.Client, body policy.PatchPolicyBody) error
 }
 
 // The scopes changes associated with specific scope name
 var scopes = map[string]*ScopeChanges{
 	DefaultScope: {
-		policy.PolicyMinimumID+1,
+		policy.PolicyMinimumID + 1,
 		policy.PolicyMaximumID,
 		policy.PatchPolicy,
 	},
 	"federal": {
-		policy.FedPolicyMinimumID+1,
+		policy.FedPolicyMinimumID + 1,
 		policy.FedPolicyMaximumID,
 		policy.PatchFedPolicy,
 	},
@@ -190,15 +198,11 @@ func GetScopeChanges(scopeName string) *ScopeChanges {
 }
 
 // Patch a policy rule, taking care of the scope
-func patchPolicy(body *policy.PatchPolicyBody, APIClient *client.Client, scopeName string) error {
-	var err error
-	var params *ScopeChanges
-	
+func patchPolicy(APIClient *client.Client, body *policy.PatchPolicyBody, scopeName string) error {
 	// Get the dynamic rules index in body.Rules
 	// Used to determinate the amount of need available index
-	indexes := getDynamicPolicyIndexes(&body.Rules)
-	
-	params = GetScopeChanges(scopeName)
+	indexes := GetDynamicPolicyIndexes(&body.Rules)
+	params := GetScopeChanges(scopeName)
 
 	// Get every available policy IDs
 	policyIDs, err := policy.GetPolicyAvailableIDs(
@@ -220,6 +224,39 @@ func patchPolicy(body *policy.PatchPolicyBody, APIClient *client.Client, scopeNa
 	return params.patchFunc(APIClient, *body)
 }
 
+func GetPolicyRuleMap(p *policy.PolicyRule) *map[string]any {
+	rule, err := helper.StructToMap(*p)
+
+	if err != nil {
+		return nil
+	}
+
+	delete(rule, "last_modified_timestamp")
+	delete(rule, "created_timestamp")
+	delete(rule, "id")
+
+	rule["policy_id"] = p.ID
+	rule["applications"] = p.Applications
+
+	return &rule
+}
+
+func GetPolicyRulesSet(policies *[]policy.PolicyRule) []map[string]any {
+	var ret []map[string]any
+
+	for _, p := range *policies {
+		rule := GetPolicyRuleMap(&p)
+
+		if rule == nil {
+			return ret
+		}
+
+		ret = append(ret, *rule)
+	}
+
+	return ret
+}
+
 func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var err error
 
@@ -230,9 +267,10 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		Rules: readPolicyRules(rulesRaw),
 	}
 
+	// Patching policy handling the configuration scope
 	err = patchPolicy(
-		&body,
 		APIClient,
+		&body,
 		d.Get("rules_scope").(string),
 	)
 
@@ -248,6 +286,15 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		return diag.FromErr(err)
 	}
 
+	// Update policy_ids
+	var policy_ids []int
+
+	for _, rule := range body.Rules {
+		policy_ids = append(policy_ids, rule.ID)
+	}
+
+	d.Set("rule", GetPolicyRulesSet(&body.Rules))
+	d.Set("policy_ids", policy_ids)
 	d.SetId(id)
 
 	return resourcePolicyRead(ctx, d, meta)
@@ -258,29 +305,9 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 }
 
 func resourcePolicyRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	return nil
-}
-
-func resourcePolicyDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	var delete []int
+	var rules []map[string]any
 
 	APIClient := meta.(*client.Client)
-
-	// Magic trick
-	//
-	// NeuVector itself can identifies policy rules
-	// with other fields than the unique ID. When we create a policy, NeuVector will check if
-	// another one has the same behavior, if yes if will patch it instead of creating a new one.
-	// We cannot retrieve the dynamics IDS injected into the HTTP body at the creation.
-	//
-	// So we are going to get every policies, then we will get the
-	// dynamically created IDs by comparing the unique fields:
-	// "from", "to", "ports", "applications", "learned", etc..
-	//
-	// Yes, even the field "comment" :]
-
-	rulesRaw := d.Get("rule").(*schema.Set).List()
-	resourcePolicyRules := readPolicyRules(rulesRaw)
 
 	policies, err := policy.GetPolicies(APIClient)
 
@@ -288,15 +315,45 @@ func resourcePolicyDelete(_ context.Context, d *schema.ResourceData, meta any) d
 		return diag.FromErr(err)
 	}
 
-	scope := d.Get("rules_scope").(string)
-	params := GetScopeChanges(scope)
+	policiesIDsRaw := d.Get("policy_ids").(*schema.Set).List()
+	policiesIDs, err := helper.FromSlice[int](policiesIDsRaw)
 
-	for _, policyRule := range policies.Rules {
-		for _, resourcePolicyRule := range resourcePolicyRules {
-			if policyRule.Equal(&resourcePolicyRule) {
-				delete = append(delete, policyRule.ID)
-			}
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	// Creating a set of rules to inject it into the resource
+	for _, p := range policies.Rules {
+		exists, _ := util.ItemExists(policiesIDs, p.ID)
+
+		if !exists {
+			continue
 		}
+
+		rule := GetPolicyRuleMap(&p)
+
+		if rule == nil {
+			continue
+		}
+
+		rules = append(rules, *rule)
+	}
+
+	d.Set("rule", rules)
+
+	return nil
+}
+
+func resourcePolicyDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	APIClient := meta.(*client.Client)
+
+	params := GetScopeChanges(d.Get("rules_scope").(string))
+
+	deleteRaw := d.Get("policy_ids").(*schema.Set).List()
+	delete, err := helper.FromSlice[int](deleteRaw)
+
+	if err != nil {
+		return diag.FromErr(err)
 	}
 
 	params.patchFunc(
@@ -307,4 +364,34 @@ func resourcePolicyDelete(_ context.Context, d *schema.ResourceData, meta any) d
 	)
 
 	return nil
+}
+
+func resourcePolicyImport(_ context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	APIClient := meta.(*client.Client)
+
+	ruleID, err := strconv.Atoi(d.Id())
+
+	if err != nil {
+		return nil, err
+	}
+
+	p, err := policy.GetPolicy(APIClient, ruleID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	rule := p.Rule
+
+	id, err := uuid.GenerateUUID()
+
+	if err != nil {
+		return nil, err
+	}
+
+	d.Set("rules_scope", rule.CfgType)
+	d.Set("policy_ids", []int{rule.ID})
+	d.SetId(id)
+
+	return []*schema.ResourceData{d}, nil
 }

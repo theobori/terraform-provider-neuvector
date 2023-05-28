@@ -49,6 +49,7 @@ var resourceRegistrySchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Optional:    true,
 		Description: "Authentication token.",
+		Default:     "",
 		Sensitive:   true,
 	},
 	"auth_with_token": {
@@ -72,16 +73,19 @@ var resourceRegistrySchema = map[string]*schema.Schema{
 	"repo_limit": {
 		Type:        schema.TypeInt,
 		Optional:    true,
+		Default:     200,
 		Description: "Limit for the number of repositories.",
 	},
 	"tag_limit": {
 		Type:        schema.TypeInt,
 		Optional:    true,
+		Default:     20,
 		Description: "Max images tag to scan.",
 	},
 	"cfg_type": {
 		Type:        schema.TypeString,
 		Optional:    true,
+		Default:     "user_created",
 		Description: "Configuration type",
 	},
 }
@@ -92,6 +96,9 @@ func ResourceRegistry() *schema.Resource {
 		ReadContext:   resourceRegistryRead,
 		DeleteContext: resourceRegistryDelete,
 		UpdateContext: resourceRegistryUpdate,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 
 		Schema: resourceRegistrySchema,
 	}
@@ -117,7 +124,7 @@ func readRegistry(d *schema.ResourceData) (*scan.CreateRegistryBody, error) {
 	return &ret, nil
 }
 
-func resourceRegistryCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceRegistryCreate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	APIClient := meta.(*client.Client)
 
 	body, err := readRegistry(d)
@@ -132,16 +139,13 @@ func resourceRegistryCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	d.SetId(body.Name)
 
-	return resourceRegistryRead(ctx, d, meta)
+	return nil
 }
 
 func resourceRegistryUpdate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	APIClient := meta.(*client.Client)
 
-	if d.HasChanges(
-		"name",
-		"registry_type",
-	) {
+	if d.HasChanges("name", "registry_type") {
 		return diag.Errorf("You are not allowed to change the registry name and type.")
 	}
 
@@ -159,6 +163,26 @@ func resourceRegistryUpdate(_ context.Context, d *schema.ResourceData, meta any)
 }
 
 func resourceRegistryRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var err error
+
+	APIClient := meta.(*client.Client)
+
+	r, err := scan.GetRegistry(
+		APIClient,
+		d.Id(),
+	)
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	// Forcing field overriding to permits terraform import
+	if err = helper.TfFromStruct(r.Registry, d, true); err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.Set("filters", r.Registry.Filters)
+
 	return nil
 }
 

@@ -13,12 +13,6 @@ import (
 )
 
 var resourceAdmissionRuleSchema = map[string]*schema.Schema{
-	"rule_id": {
-		Type:        schema.TypeInt,
-		Optional:    true,
-		Description: "Represents the admission rule unique ID.",
-		Default:     0,
-	},
 	"category": {
 		Type:        schema.TypeString,
 		Required:    true,
@@ -102,6 +96,9 @@ func ResourceAdmissionRule() *schema.Resource {
 		ReadContext:   resourceAdmissionRuleRead,
 		UpdateContext: resourceAdmissionRuleUpdate,
 		DeleteContext: resourceAdmissionRuleDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 
 		Schema: resourceAdmissionRuleSchema,
 	}
@@ -118,7 +115,7 @@ func resourceAdmissionRuleCreate(ctx context.Context, d *schema.ResourceData, me
 		d,
 	)
 
-	body.ID = d.Get("rule_id").(int)
+	body.ID = 0
 	body.Criteria = criterias
 
 	rule, err := admission.CreateAdmissionRule(
@@ -135,7 +132,47 @@ func resourceAdmissionRuleCreate(ctx context.Context, d *schema.ResourceData, me
 	return resourceAdmissionRuleRead(ctx, d, meta)
 }
 
+// Get criteria type set as a map from []admission.AdmissionRuleCriterion
+func getCriteria(criterias []admission.AdmissionRuleCriterion) []map[string]any {
+	var ret []map[string]any
+
+	for _, criteria := range criterias {
+		_map, err := helper.StructToMap(criteria)
+
+		if err != nil {
+			continue
+		}
+
+		ret = append(ret, _map)
+	}
+
+	return ret
+}
+
 func resourceAdmissionRuleRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	APIClient := meta.(*client.Client)
+
+	id, err := strconv.Atoi(d.Id())
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	adm, err := admission.GetAdmissionRule(APIClient, id)
+
+	if err != nil {
+		d.SetId("")
+		return nil
+	}
+
+	rule := adm.Rule
+
+	if err := helper.TfFromStruct(rule, d, true); err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.Set("criteria", getCriteria(rule.Criteria))
+
 	return nil
 }
 
@@ -163,7 +200,7 @@ func resourceAdmissionRuleDelete(_ context.Context, d *schema.ResourceData, meta
 
 	var err error
 
-	ruleId, err := strconv.Atoi(d.Id())
+	id, err := strconv.Atoi(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -171,7 +208,7 @@ func resourceAdmissionRuleDelete(_ context.Context, d *schema.ResourceData, meta
 
 	err = admission.DeleteAdmissionRule(
 		APIClient,
-		ruleId,
+		id,
 	)
 
 	if err != nil {

@@ -30,14 +30,15 @@ func setResourceField(
 	k string,
 	v any,
 	d *schema.ResourceData,
+	force bool,
 ) bool {
 	if reflect.TypeOf(v).Kind() == reflect.Slice {
 		return false
 	}
 
-	dValue := d.Get(k)
+	dValue, ok := d.GetOk(k)
 
-	if dValue == nil {
+	if dValue == nil || (!ok && !force) {
 		return false
 	}
 
@@ -81,7 +82,7 @@ func StructToMap(s any) (map[string]any, error) {
 }
 
 // Update values in a Terraform ResourceData from `s`
-func ResourceFromStruct(s any, d *schema.ResourceData) error {
+func TfFromStruct(s any, d *schema.ResourceData, force bool) error {
 	m, err := StructToMap(s)
 
 	if err != nil {
@@ -89,10 +90,18 @@ func ResourceFromStruct(s any, d *schema.ResourceData) error {
 	}
 
 	for k, v := range m {
-		setResourceField(k, v, d)
+		setResourceField(k, v, d, force)
 	}
 
 	return nil
+}
+
+func ResourceFromStruct(s any, d *schema.ResourceData) error {
+	return TfFromStruct(s, d, false)
+}
+
+func DataFromStruct(s any, d *schema.ResourceData) error {
+	return TfFromStruct(s, d, true)
 }
 
 // Get a new composed set from a struct

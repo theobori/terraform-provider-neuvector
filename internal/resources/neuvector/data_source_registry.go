@@ -196,7 +196,7 @@ func dataSourceRegistryRead(_ context.Context, d *schema.ResourceData, meta any)
 
 	registry := registrySummary.Registry
 
-	if err := helper.ResourceFromStruct(registry, d); err != nil {
+	if err := helper.DataFromStruct(registry, d); err != nil {
 		return diag.FromErr(err)
 	}
 
