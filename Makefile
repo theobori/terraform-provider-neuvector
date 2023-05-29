@@ -1,12 +1,13 @@
 # Provider metadata and versionning
 PROVIDER = neuvector
+VERSION = 0.0.1
+RELEASE_VERSION ?= $(VERSION)
 
 # Terraform metadata for installation
 BIN = terraform-provider-$(PROVIDER)
 HOSTNAME = github.com
 NAMESPACE = theobori
-VERSION = 1.0.0
-OS_ARCH = linux_amd64
+OS_ARCH ?= linux_amd64
 
 # Terraform
 TF_PLUGINS_DIR = ~/.terraform.d/plugins
@@ -46,6 +47,10 @@ install: build
 	mkdir -p $(BIN_DIR)
 	mv $(BIN) $(BIN_PATH)
 
+release:
+	git tag $(RELEASE_VERSION)
+	git push origin $(RELEASE_VERSION)
+
 fclean: clean uninstall
 	$(RM) -r $(TF_CACHE)
 
@@ -54,6 +59,7 @@ re: fclean build install
 .PHONY: \
 	build \
 	install \
+	release \
 	uninstall \
 	fmt \
 	testacc \

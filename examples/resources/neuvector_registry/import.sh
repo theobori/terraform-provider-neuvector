@@ -1,0 +1,1 @@
+terraform import neuvector_registry.name {{registry_name}}

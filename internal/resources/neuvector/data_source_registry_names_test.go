@@ -12,7 +12,7 @@ func TestAccDataSourceRegistryNames(t *testing.T) {
 		ProviderFactories: testutils.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testutils.TestAccExampleFile(t, "data-sources/neuvector_registry_ids/data-source.tf"),
+				Config: testutils.TestAccExampleFile(t, "data-sources/neuvector_registry_names/data-source.tf"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.neuvector_registry_names.test", "names.#"),
 				),

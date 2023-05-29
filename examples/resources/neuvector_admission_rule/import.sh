@@ -1,0 +1,1 @@
+terraform import neuvector_admission_rule.name {{admission_rule_id}}

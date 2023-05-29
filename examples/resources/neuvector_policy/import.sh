@@ -1,0 +1,1 @@
+terraform import neuvector_policy.name {{policy_id}}
