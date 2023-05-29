@@ -1,0 +1,38 @@
+name: Terraform acceptance tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '1.19'
+      - run: go version
+
+      - name: Build and install the provider
+        run: |
+          make install
+
+      - name: Run the NeuVector allinone instance
+        run: |
+          make neuvector
+        
+      - name: Waitings for NeuVector to initialize
+        run: |
+          sleep 20
+      
+      - name: Terraform acceptance tests
+        run: |
+          make testacc
