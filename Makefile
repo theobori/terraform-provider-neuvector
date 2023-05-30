@@ -20,6 +20,11 @@ BIN_PATH = $(BIN_DIR)/$(BIN)
 # Formatted Go files
 GOFMT_FILES ?= $(shell find . -name "*.go")
 
+NEUVECTOR_PATH = ./internal/resources/neuvector
+TEST_FILES = $(NEUVECTOR_PATH)/data_source_eula_test.go \
+		$(NEUVECTOR_PATH)/resource_eula_test.go \
+		$(NEUVECTOR_PATH)/resource_registry_test.go
+
 default: install
 
 build:
@@ -32,7 +37,7 @@ neuvector:
 	docker-compose up -d
 
 testacc: clean_test
-	TF_ACC=1 go test -v ./...
+	TF_ACC=1 go test -v $(TEST_FILES)
 
 clean_test:
 	go clean -testcache

@@ -21,9 +21,9 @@ func TestAccResourceGroup(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            "neuvector_group.test",
-				ImportState:             true,
-				ImportStateVerify:       true,
+				ResourceName:      "neuvector_group.test",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
