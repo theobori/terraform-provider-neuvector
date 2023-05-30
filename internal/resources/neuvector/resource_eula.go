@@ -54,6 +54,17 @@ func resourceEULACreate(ctx context.Context, d *schema.ResourceData, meta any) d
 }
 
 func resourceEULAUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	APIClient := meta.(*goneuvector.Client)
+
+	eula := helper.FromSchemas[goneuvector.EULA](
+		resourceEULASchema,
+		d,
+	)
+
+	if err := APIClient.AcceptEULA(eula); err != nil {
+		return diag.FromErr(err)
+	}
+
 	return nil
 }
 
