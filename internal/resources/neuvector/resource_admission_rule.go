@@ -7,8 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/theobori/go-neuvector/client"
-	"github.com/theobori/go-neuvector/controller/admission"
+	goneuvector "github.com/theobori/go-neuvector/neuvector"
 	"github.com/theobori/terraform-provider-neuvector/internal/helper"
 )
 
@@ -105,23 +104,19 @@ func ResourceAdmissionRule() *schema.Resource {
 }
 
 func resourceAdmissionRuleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	APIClient := meta.(*client.Client)
+	APIClient := meta.(*goneuvector.Client)
 
 	criteriasRaw := d.Get("criteria").(*schema.Set).List()
-	criterias := helper.FromTypeSetDefault[admission.AdmissionRuleCriterion](criteriasRaw)
+	criterias := helper.FromTypeSetDefault[goneuvector.AdmissionRuleCriterion](criteriasRaw)
 
-	body := helper.FromSchemas[admission.CreateAdmissionRuleBody](
+	body := helper.FromSchemas[goneuvector.CreateAdmissionRuleBody](
 		resourceAdmissionRuleSchema,
 		d,
 	)
 
-	body.ID = 0
 	body.Criteria = criterias
 
-	rule, err := admission.CreateAdmissionRule(
-		APIClient,
-		body,
-	)
+	rule, err := APIClient.CreateAdmissionRule(body)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -133,7 +128,7 @@ func resourceAdmissionRuleCreate(ctx context.Context, d *schema.ResourceData, me
 }
 
 // Get criteria type set as a map from []admission.AdmissionRuleCriterion
-func getCriteria(criterias []admission.AdmissionRuleCriterion) []map[string]any {
+func getCriteria(criterias []goneuvector.AdmissionRuleCriterion) []map[string]any {
 	var ret []map[string]any
 
 	for _, criteria := range criterias {
@@ -150,7 +145,7 @@ func getCriteria(criterias []admission.AdmissionRuleCriterion) []map[string]any 
 }
 
 func resourceAdmissionRuleRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	APIClient := meta.(*client.Client)
+	APIClient := meta.(*goneuvector.Client)
 
 	id, err := strconv.Atoi(d.Id())
 
@@ -158,7 +153,7 @@ func resourceAdmissionRuleRead(_ context.Context, d *schema.ResourceData, meta a
 		return diag.FromErr(err)
 	}
 
-	adm, err := admission.GetAdmissionRule(APIClient, id)
+	adm, err := APIClient.GetAdmissionRule(id)
 
 	if err != nil {
 		d.SetId("")
@@ -196,7 +191,7 @@ func resourceAdmissionRuleUpdate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceAdmissionRuleDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	APIClient := meta.(*client.Client)
+	APIClient := meta.(*goneuvector.Client)
 
 	var err error
 
@@ -206,12 +201,7 @@ func resourceAdmissionRuleDelete(_ context.Context, d *schema.ResourceData, meta
 		return diag.FromErr(err)
 	}
 
-	err = admission.DeleteAdmissionRule(
-		APIClient,
-		id,
-	)
-
-	if err != nil {
+	if err := APIClient.DeleteAdmissionRule(id); err != nil {
 		return diag.FromErr(err)
 	}
 

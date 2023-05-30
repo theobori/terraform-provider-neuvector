@@ -6,8 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/theobori/go-neuvector/client"
-	"github.com/theobori/go-neuvector/controller/scan"
+	goneuvector "github.com/theobori/go-neuvector/neuvector"
 	"github.com/theobori/terraform-provider-neuvector/internal/helper"
 )
 
@@ -104,8 +103,8 @@ func ResourceRegistry() *schema.Resource {
 	}
 }
 
-func readRegistry(d *schema.ResourceData) (*scan.CreateRegistryBody, error) {
-	var ret scan.CreateRegistryBody
+func readRegistry(d *schema.ResourceData) (*goneuvector.CreateRegistryBody, error) {
+	var ret goneuvector.CreateRegistryBody
 
 	filtersRaw := d.Get("filters").([]any)
 	filters, err := helper.FromSlice[string](filtersRaw)
@@ -114,7 +113,7 @@ func readRegistry(d *schema.ResourceData) (*scan.CreateRegistryBody, error) {
 		return &ret, err
 	}
 
-	ret = helper.FromSchemas[scan.CreateRegistryBody](
+	ret = helper.FromSchemas[goneuvector.CreateRegistryBody](
 		resourceRegistrySchema,
 		d,
 	)
@@ -125,7 +124,7 @@ func readRegistry(d *schema.ResourceData) (*scan.CreateRegistryBody, error) {
 }
 
 func resourceRegistryCreate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	APIClient := meta.(*client.Client)
+	APIClient := meta.(*goneuvector.Client)
 
 	body, err := readRegistry(d)
 
@@ -133,7 +132,7 @@ func resourceRegistryCreate(_ context.Context, d *schema.ResourceData, meta any)
 		return diag.FromErr(err)
 	}
 
-	if err := scan.CreateRegistry(APIClient, *body); err != nil {
+	if err := APIClient.CreateRegistry(*body); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -143,7 +142,7 @@ func resourceRegistryCreate(_ context.Context, d *schema.ResourceData, meta any)
 }
 
 func resourceRegistryUpdate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	APIClient := meta.(*client.Client)
+	APIClient := meta.(*goneuvector.Client)
 
 	if d.HasChanges("name", "registry_type") {
 		return diag.Errorf("You are not allowed to change the registry name and type.")
@@ -155,7 +154,7 @@ func resourceRegistryUpdate(_ context.Context, d *schema.ResourceData, meta any)
 		return diag.FromErr(err)
 	}
 
-	if err := scan.PatchRegistry(APIClient, *body, body.Name); err != nil {
+	if err := APIClient.PatchRegistry(*body, body.Name); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -165,12 +164,9 @@ func resourceRegistryUpdate(_ context.Context, d *schema.ResourceData, meta any)
 func resourceRegistryRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var err error
 
-	APIClient := meta.(*client.Client)
+	APIClient := meta.(*goneuvector.Client)
 
-	r, err := scan.GetRegistry(
-		APIClient,
-		d.Id(),
-	)
+	r, err := APIClient.GetRegistry(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -187,9 +183,9 @@ func resourceRegistryRead(_ context.Context, d *schema.ResourceData, meta any) d
 }
 
 func resourceRegistryDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	APIClient := meta.(*client.Client)
+	APIClient := meta.(*goneuvector.Client)
 
-	if err := scan.DeleteRegistry(APIClient, d.Id()); err != nil {
+	if err := APIClient.DeleteRegistry(d.Id()); err != nil {
 		return diag.FromErr(err)
 	}
 

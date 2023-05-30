@@ -8,8 +8,7 @@ import (
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/theobori/go-neuvector/client"
-	"github.com/theobori/go-neuvector/controller/policy"
+	goneuvector "github.com/theobori/go-neuvector/neuvector"
 	"github.com/theobori/go-neuvector/util"
 	"github.com/theobori/terraform-provider-neuvector/internal/helper"
 )
@@ -90,8 +89,8 @@ var resourcePolicyRuleSchema = map[string]*schema.Schema{
 }
 
 // Read a policy rule
-func readPolicyRule(_map map[string]any) (*policy.PolicyRule, error) {
-	policy := helper.FromMap[policy.PolicyRule](_map)
+func readPolicyRule(_map map[string]any) (*goneuvector.PolicyRule, error) {
+	policy := helper.FromMap[goneuvector.PolicyRule](_map)
 
 	policyID := _map["policy_id"].(int)
 	applicationsRaw := _map["applications"].([]any)
@@ -109,7 +108,7 @@ func readPolicyRule(_map map[string]any) (*policy.PolicyRule, error) {
 }
 
 // Only for `schema.TypeSet` with `schema.Resource`
-func readPolicyRules(set []any) []policy.PolicyRule {
+func readPolicyRules(set []any) []goneuvector.PolicyRule {
 	return helper.FromTypeSetCallback(set, readPolicyRule)
 }
 
@@ -154,7 +153,7 @@ func ResourcePolicy() *schema.Resource {
 }
 
 // Return the indexes of the dynamic policies
-func GetDynamicPolicyIndexes(policies *[]policy.PolicyRule) []int {
+func GetDynamicPolicyIndexes(policies *[]goneuvector.PolicyRule) []int {
 	ret := []int{}
 
 	for i, p := range *policies {
@@ -168,22 +167,22 @@ func GetDynamicPolicyIndexes(policies *[]policy.PolicyRule) []int {
 
 // Stores the changing parameters between the differents scopes
 type ScopeChanges struct {
-	minID     int
-	maxID     int
-	patchFunc func(client *client.Client, body policy.PatchPolicyBody) error
+	minID int
+	maxID int
+	IsFed bool
 }
 
 // The scopes changes associated with specific scope name
 var scopes = map[string]*ScopeChanges{
 	DefaultScope: {
-		policy.PolicyMinimumID + 1,
-		policy.PolicyMaximumID,
-		policy.PatchPolicy,
+		goneuvector.PolicyMinimumID + 1,
+		goneuvector.PolicyMaximumID,
+		false,
 	},
 	"federal": {
-		policy.FedPolicyMinimumID + 1,
-		policy.FedPolicyMaximumID,
-		policy.PatchFedPolicy,
+		goneuvector.FedPolicyMinimumID + 1,
+		goneuvector.FedPolicyMaximumID,
+		true,
 	},
 }
 
@@ -198,15 +197,14 @@ func GetScopeChanges(scopeName string) *ScopeChanges {
 }
 
 // Patch a policy rule, taking care of the scope
-func patchPolicy(APIClient *client.Client, body *policy.PatchPolicyBody, scopeName string) error {
+func patchPolicy(APIClient *goneuvector.Client, body *goneuvector.PatchPolicyBody, scopeName string) error {
 	// Get the dynamic rules index in body.Rules
 	// Used to determinate the amount of need available index
 	indexes := GetDynamicPolicyIndexes(&body.Rules)
 	params := GetScopeChanges(scopeName)
 
 	// Get every available policy IDs
-	policyIDs, err := policy.GetPolicyAvailableIDs(
-		APIClient,
+	policyIDs, err := APIClient.GetPolicyAvailableIDs(
 		params.minID,
 		params.maxID,
 		len(indexes),
@@ -221,10 +219,10 @@ func patchPolicy(APIClient *client.Client, body *policy.PatchPolicyBody, scopeNa
 		body.Rules[index].ID = policyIDs[i]
 	}
 
-	return params.patchFunc(APIClient, *body)
+	return APIClient.PatchPolicy(*body, params.IsFed)
 }
 
-func GetPolicyRuleMap(p *policy.PolicyRule) *map[string]any {
+func GetPolicyRuleMap(p *goneuvector.PolicyRule) *map[string]any {
 	rule, err := helper.StructToMap(*p)
 
 	if err != nil {
@@ -241,7 +239,7 @@ func GetPolicyRuleMap(p *policy.PolicyRule) *map[string]any {
 	return &rule
 }
 
-func GetPolicyRulesSet(policies *[]policy.PolicyRule) []map[string]any {
+func GetPolicyRulesSet(policies *[]goneuvector.PolicyRule) []map[string]any {
 	var ret []map[string]any
 
 	for _, p := range *policies {
@@ -260,10 +258,10 @@ func GetPolicyRulesSet(policies *[]policy.PolicyRule) []map[string]any {
 func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var err error
 
-	APIClient := meta.(*client.Client)
+	APIClient := meta.(*goneuvector.Client)
 
 	rulesRaw := d.Get("rule").(*schema.Set).List()
-	body := policy.PatchPolicyBody{
+	body := goneuvector.PatchPolicyBody{
 		Rules: readPolicyRules(rulesRaw),
 	}
 
@@ -307,9 +305,9 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 func resourcePolicyRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var rules []map[string]any
 
-	APIClient := meta.(*client.Client)
+	APIClient := meta.(*goneuvector.Client)
 
-	policies, err := policy.GetPolicies(APIClient)
+	policies, err := APIClient.GetPolicies()
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -345,7 +343,7 @@ func resourcePolicyRead(_ context.Context, d *schema.ResourceData, meta any) dia
 }
 
 func resourcePolicyDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	APIClient := meta.(*client.Client)
+	APIClient := meta.(*goneuvector.Client)
 
 	params := GetScopeChanges(d.Get("rules_scope").(string))
 
@@ -356,18 +354,18 @@ func resourcePolicyDelete(_ context.Context, d *schema.ResourceData, meta any) d
 		return diag.FromErr(err)
 	}
 
-	params.patchFunc(
-		APIClient,
-		policy.PatchPolicyBody{
+	APIClient.PatchPolicy(
+		goneuvector.PatchPolicyBody{
 			Delete: delete,
 		},
+		params.IsFed,
 	)
 
 	return nil
 }
 
 func resourcePolicyImport(_ context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-	APIClient := meta.(*client.Client)
+	APIClient := meta.(*goneuvector.Client)
 
 	ruleID, err := strconv.Atoi(d.Id())
 
@@ -375,14 +373,13 @@ func resourcePolicyImport(_ context.Context, d *schema.ResourceData, meta any) (
 		return nil, err
 	}
 
-	p, err := policy.GetPolicy(APIClient, ruleID)
+	p, err := APIClient.GetPolicy(ruleID)
 
 	if err != nil {
 		return nil, err
 	}
 
 	rule := p.Rule
-
 	id, err := uuid.GenerateUUID()
 
 	if err != nil {

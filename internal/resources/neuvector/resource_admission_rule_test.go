@@ -7,13 +7,12 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/theobori/go-neuvector/client"
-	"github.com/theobori/go-neuvector/controller/admission"
+	goneuvector "github.com/theobori/go-neuvector/neuvector"
 	"github.com/theobori/terraform-provider-neuvector/internal/testutils"
 )
 
 func TestAccResourceAdmissionRule(t *testing.T) {
-	var adm admission.AdmissionRule
+	var adm goneuvector.AdmissionRule
 
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: testutils.ProviderFactories,
@@ -38,7 +37,7 @@ func TestAccResourceAdmissionRule(t *testing.T) {
 	})
 }
 
-func testAccAdmissionRuleCheckExists(rn string, adm *admission.AdmissionRule) resource.TestCheckFunc {
+func testAccAdmissionRuleCheckExists(rn string, adm *goneuvector.AdmissionRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[rn]
 
@@ -50,14 +49,14 @@ func testAccAdmissionRuleCheckExists(rn string, adm *admission.AdmissionRule) re
 			return fmt.Errorf("resource id not set")
 		}
 
-		APIClient := testutils.Provider.Meta().(*client.Client)
+		APIClient := testutils.Provider.Meta().(*goneuvector.Client)
 		id, err := strconv.Atoi(rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		rule, err := admission.GetAdmissionRule(APIClient, id)
+		rule, err := APIClient.GetAdmissionRule(id)
 
 		if err != nil {
 			return err
@@ -69,11 +68,11 @@ func testAccAdmissionRuleCheckExists(rn string, adm *admission.AdmissionRule) re
 	}
 }
 
-func testAccAdmissionRuleCheckDestroy(adm *admission.AdmissionRule) resource.TestCheckFunc {
+func testAccAdmissionRuleCheckDestroy(adm *goneuvector.AdmissionRule) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		APIClient := testutils.Provider.Meta().(*client.Client)
+		APIClient := testutils.Provider.Meta().(*goneuvector.Client)
 
-		_, err := admission.GetAdmissionRule(APIClient, adm.ID)
+		_, err := APIClient.GetAdmissionRule(adm.ID)
 
 		if err == nil {
 			return fmt.Errorf("admission rule still exists")

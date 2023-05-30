@@ -1,7 +1,7 @@
 # Provider metadata and versionning
 PROVIDER = neuvector
 VERSION = 0.0.1
-RELEASE_VERSION ?= $(VERSION)
+RELEASE_VERSION ?= v$(VERSION)
 
 # Terraform metadata for installation
 BIN = terraform-provider-$(PROVIDER)

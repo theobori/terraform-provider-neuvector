@@ -5,8 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/theobori/go-neuvector/client"
-	"github.com/theobori/go-neuvector/controller/scan"
+	goneuvector "github.com/theobori/go-neuvector/neuvector"
 	"github.com/theobori/terraform-provider-neuvector/internal/helper"
 )
 
@@ -185,10 +184,10 @@ func DataSourceRegistry() *schema.Resource {
 }
 
 func dataSourceRegistryRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	APIClient := meta.(*client.Client)
+	APIClient := meta.(*goneuvector.Client)
 
 	name := d.Get("name").(string)
-	registrySummary, err := scan.GetRegistry(APIClient, name)
+	registrySummary, err := APIClient.GetRegistry(name)
 
 	if err != nil {
 		return diag.FromErr(err)

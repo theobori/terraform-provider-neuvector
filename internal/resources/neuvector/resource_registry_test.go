@@ -6,13 +6,12 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/theobori/go-neuvector/client"
-	"github.com/theobori/go-neuvector/controller/scan"
+	goneuvector "github.com/theobori/go-neuvector/neuvector"
 	"github.com/theobori/terraform-provider-neuvector/internal/testutils"
 )
 
 func TestAccResourceRegistry(t *testing.T) {
-	var r scan.Registry
+	var r goneuvector.Registry
 
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: testutils.ProviderFactories,
@@ -37,7 +36,7 @@ func TestAccResourceRegistry(t *testing.T) {
 	})
 }
 
-func testAccRegistryCheckExists(rn string, r *scan.Registry) resource.TestCheckFunc {
+func testAccRegistryCheckExists(rn string, r *goneuvector.Registry) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[rn]
 
@@ -49,9 +48,9 @@ func testAccRegistryCheckExists(rn string, r *scan.Registry) resource.TestCheckF
 			return fmt.Errorf("resource id not set")
 		}
 
-		APIClient := testutils.Provider.Meta().(*client.Client)
+		APIClient := testutils.Provider.Meta().(*goneuvector.Client)
 
-		registry, err := scan.GetRegistry(APIClient, rs.Primary.ID)
+		registry, err := APIClient.GetRegistry(rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -63,11 +62,11 @@ func testAccRegistryCheckExists(rn string, r *scan.Registry) resource.TestCheckF
 	}
 }
 
-func testAccRegistryCheckDestroy(r *scan.Registry) resource.TestCheckFunc {
+func testAccRegistryCheckDestroy(r *goneuvector.Registry) resource.TestCheckFunc {
 	return func(_ *terraform.State) error {
-		APIClient := testutils.Provider.Meta().(*client.Client)
+		APIClient := testutils.Provider.Meta().(*goneuvector.Client)
 
-		_, err := scan.GetRegistry(APIClient, r.Name)
+		_, err := APIClient.GetRegistry(r.Name)
 
 		if err == nil {
 			return fmt.Errorf("registry still exists")

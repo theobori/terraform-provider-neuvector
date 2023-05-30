@@ -5,7 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/theobori/go-neuvector/client"
+	goneuvector "github.com/theobori/go-neuvector/neuvector"
 	"github.com/theobori/terraform-provider-neuvector/internal/resources/neuvector"
 )
 
@@ -16,19 +16,19 @@ func Provider() *schema.Provider {
 			"username": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("NEUVECTOR_PUSERNAME", client.DefaultUsername),
+				DefaultFunc: schema.EnvDefaultFunc("NEUVECTOR_PUSERNAME", goneuvector.DefaultUsername),
 				Description: "Represents the NeuVector username.",
 			},
 			"password": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("NEUVECTOR_PASSWORD", client.DefaultPassword),
+				DefaultFunc: schema.EnvDefaultFunc("NEUVECTOR_PASSWORD", goneuvector.DefaultPassword),
 				Description: "Represents the NeuVector password.",
 			},
 			"base_url": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				DefaultFunc: schema.EnvDefaultFunc("NEUVECTOR_BASE_URL", client.DefaultBaseUrl),
+				DefaultFunc: schema.EnvDefaultFunc("NEUVECTOR_BASE_URL", goneuvector.DefaultBaseUrl),
 				Description: "Represents the NeuVector Controller REST API base url.",
 			},
 			"insecure": {
@@ -57,19 +57,19 @@ func Provider() *schema.Provider {
 
 	provider.ConfigureContextFunc = func(_ context.Context, d *schema.ResourceData) (any, diag.Diagnostics) {
 		// Setup the authentication
-		auth := client.NewClientAuth(
+		auth := goneuvector.NewClientAuth(
 			d.Get("username").(string),
 			d.Get("password").(string),
 		)
 
 		// Configure the API client
-		config := client.NewClientConfig(auth)
+		config := goneuvector.NewClientConfig(auth)
 
 		config.Insecure = d.Get("insecure").(bool)
 		config.BaseUrl = d.Get("base_url").(string)
 
 		// Get a new client
-		APIClient, err := client.NewClient(config)
+		APIClient, err := goneuvector.NewClient(config)
 
 		if err != nil {
 			return nil, diag.FromErr(err)

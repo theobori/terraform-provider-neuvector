@@ -6,8 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/theobori/go-neuvector/client"
-	"github.com/theobori/go-neuvector/controller/federation"
+	goneuvector "github.com/theobori/go-neuvector/neuvector"
 	"github.com/theobori/terraform-provider-neuvector/internal/helper"
 )
 
@@ -46,20 +45,20 @@ func ResourcePromote() *schema.Resource {
 }
 
 func resourcePromoteCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	APIClient := meta.(*client.Client)
+	APIClient := meta.(*goneuvector.Client)
 
-	masterRestInfo := helper.FromSchemas[federation.MasterRestInfo](
+	masterRestInfo := helper.FromSchemas[goneuvector.MasterRestInfo](
 		resourcePromoteSchema,
 		d,
 	)
-	body := helper.FromSchemas[federation.FederationMetadata](
+	body := helper.FromSchemas[goneuvector.FederationMetadata](
 		resourcePromoteSchema,
 		d,
 	)
 
 	body.MasterRestInfo = masterRestInfo
 
-	if err := federation.Promote(APIClient, body); err != nil {
+	if err := APIClient.Promote(body); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -77,9 +76,9 @@ func resourcePromoteRead(_ context.Context, d *schema.ResourceData, meta any) di
 }
 
 func resourcePromoteDelete(_ context.Context, _ *schema.ResourceData, meta any) diag.Diagnostics {
-	APIClient := meta.(*client.Client)
+	APIClient := meta.(*goneuvector.Client)
 
-	if err := federation.Demote(APIClient); err != nil {
+	if err := APIClient.Demote(); err != nil {
 		return diag.FromErr(err)
 	}
 

@@ -6,8 +6,7 @@ import (
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/theobori/go-neuvector/client"
-	"github.com/theobori/go-neuvector/controller/scan"
+	goneuvector "github.com/theobori/go-neuvector/neuvector"
 )
 
 var dataRegistryNamesSchema = map[string]*schema.Schema{
@@ -34,9 +33,9 @@ func DataSourceRegistryNames() *schema.Resource {
 func dataSourceRegistryNamesRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var names []string
 
-	APIClient := meta.(*client.Client)
+	APIClient := meta.(*goneuvector.Client)
 
-	registriesSummaries, err := scan.GetRegistries(APIClient)
+	registriesSummaries, err := APIClient.GetRegistries()
 
 	if err != nil {
 		return diag.FromErr(err)

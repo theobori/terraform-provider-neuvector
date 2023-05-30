@@ -7,8 +7,7 @@ import (
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/theobori/go-neuvector/client"
-	"github.com/theobori/go-neuvector/controller/policy"
+	goneuvector "github.com/theobori/go-neuvector/neuvector"
 	"github.com/theobori/terraform-provider-neuvector/internal/helper"
 )
 
@@ -78,11 +77,11 @@ func DataSourcePolicyIDs() *schema.Resource {
 }
 
 func dataSourcePolicyIDsRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	APIClient := meta.(*client.Client)
+	APIClient := meta.(*goneuvector.Client)
 
 	var ids []int
 
-	policies, err := policy.GetPolicies(APIClient)
+	policies, err := APIClient.GetPolicies()
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -93,7 +92,7 @@ func dataSourcePolicyIDsRead(_ context.Context, d *schema.ResourceData, meta any
 
 	for _, p := range policies.Rules {
 		// Comparing the basic type fields
-		has, _ := helper.StructHasResource[policy.PolicyRule](
+		has, _ := helper.StructHasResource[goneuvector.PolicyRule](
 			p,
 			dataPolicyIDsSchema,
 			d,
