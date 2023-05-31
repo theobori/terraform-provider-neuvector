@@ -1,4 +1,4 @@
-// resource_EULAT.go
+// resource_eula.go
 package neuvector
 
 import (
@@ -25,6 +25,9 @@ func ResourceEULA() *schema.Resource {
 		ReadContext:   resourceEULARead,
 		DeleteContext: resourceEULADelete,
 		UpdateContext: resourceEULAUpdate,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 
 		Schema: resourceEULASchema,
 	}

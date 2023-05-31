@@ -1,4 +1,4 @@
-// resource_promoteT.go
+// resource_promote.go
 package neuvector
 
 import (

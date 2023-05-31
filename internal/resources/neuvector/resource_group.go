@@ -1,3 +1,4 @@
+// resource_group.go
 package neuvector
 
 import (

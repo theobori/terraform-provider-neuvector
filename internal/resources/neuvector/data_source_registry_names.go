@@ -1,3 +1,4 @@
+// data_source_registry_names.go
 package neuvector
 
 import (

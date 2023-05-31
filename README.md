@@ -43,3 +43,4 @@ make testacc
 - [x] Registry update 
 - [x] Admission rule update 
 - [x] Supports `terraform import`
+- [ ] resource service

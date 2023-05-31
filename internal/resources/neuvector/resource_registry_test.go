@@ -30,7 +30,7 @@ func TestAccResourceRegistry(t *testing.T) {
 				ResourceName:            "neuvector_registry.test",
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"cfg_type"},
+				ImportStateVerifyIgnore: []string{"cfg_type", "scan_after_add"},
 			},
 		},
 	})

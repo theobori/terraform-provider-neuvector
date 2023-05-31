@@ -3,6 +3,8 @@ package neuvector
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -87,7 +89,12 @@ var resourceRegistrySchema = map[string]*schema.Schema{
 		Default:     "user_created",
 		Description: "Configuration type",
 	},
-}
+	"scan_after_add": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "Indicates if the registry must be scanned immediatly after beeing added.",
+		Default:     false,
+	}}
 
 func ResourceRegistry() *schema.Resource {
 	return &schema.Resource{
@@ -137,6 +144,24 @@ func resourceRegistryCreate(_ context.Context, d *schema.ResourceData, meta any)
 	}
 
 	d.SetId(body.Name)
+
+	scan := d.Get("scan_after_add").(bool)
+
+	if scan {
+		// Needed pause because NeuVector is sending the HTTP status code
+		// before the registry is fully added.
+		time.Sleep(3 * time.Second)
+
+		err = APIClient.Post(
+			fmt.Sprintf("/scan/registry/%s/scan", body.Name),
+			nil,
+			nil,
+		)
+
+		if err != nil {
+			return diag.FromErr(err)
+		}
+	}
 
 	return nil
 }

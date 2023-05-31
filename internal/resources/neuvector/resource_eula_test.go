@@ -18,6 +18,11 @@ func TestAccResourceEULA(t *testing.T) {
 					resource.TestCheckResourceAttr("neuvector_eula.test", "accepted", "true"),
 				),
 			},
+			{
+				ResourceName:            "neuvector_eula.test",
+				ImportState:             true,
+				ImportStateVerify:       true,
+			},
 		},
 	})
 }
