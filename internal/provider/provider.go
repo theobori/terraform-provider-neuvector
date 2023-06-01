@@ -47,6 +47,10 @@ func Provider() *schema.Provider {
 			"neuvector_policy":         neuvector.ResourcePolicy(),
 			"neuvector_eula":           neuvector.ResourceEULA(),
 			"neuvector_group":          neuvector.ResourceGroup(),
+			"neuvector_user":           neuvector.ResourceUser(),
+			"neuvector_user_role":      neuvector.ResourceUserRole(),
+			"neuvector_service":        neuvector.ResourceService(),
+			"neuvector_service_config": neuvector.ResourceServiceConfig(),
 		},
 
 		DataSourcesMap: map[string]*schema.Resource{

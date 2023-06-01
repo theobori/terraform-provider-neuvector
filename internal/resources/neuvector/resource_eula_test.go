@@ -19,9 +19,9 @@ func TestAccResourceEULA(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            "neuvector_eula.test",
-				ImportState:             true,
-				ImportStateVerify:       true,
+				ResourceName:      "neuvector_eula.test",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

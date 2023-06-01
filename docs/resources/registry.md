@@ -42,6 +42,7 @@ resource "neuvector_registry" "test" {
 - `password` (String, Sensitive) password for authenticate to the registry.
 - `repo_limit` (Number) Limit for the number of repositories.
 - `rescan_after_db_update` (Boolean) Flag indicating whether to rescan after database update.
+- `scan_after_add` (Boolean) Indicates if the registry must be scanned immediatly after beeing added.
 - `scan_layers` (Boolean) Flag indicating whether to scan layers.
 - `tag_limit` (Number) Max images tag to scan.
 - `username` (String, Sensitive) Username for authenticate to the registry.
