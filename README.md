@@ -3,12 +3,12 @@
 ![build](https://github.com/theobori/terraform-provider-neuvector/actions/workflows/build.yml/badge.svg)
 ![tests](https://github.com/theobori/terraform-provider-neuvector/actions/workflows/tests.yml/badge.svg)
 
-
 ## 📖 Build and run
 
 You only need the following requirements:
 
--  [Terraform](https://www.terraform.io/downloads.html) 1.4.6+
+- [Terraform](https://www.terraform.io/downloads.html) 1.4.6+
+- [Go](https://golang.org/doc/install) 1.19
 
 To build and install the terraform plugin, you should run the following command.
 Override the `OS_ARCH` environment variable if needed (the default one is in `Makefile`.
@@ -43,4 +43,4 @@ make testacc
 - [x] Registry update 
 - [x] Admission rule update 
 - [x] Supports `terraform import`
-- [ ] resource service
+- [x] resource service

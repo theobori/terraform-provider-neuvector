@@ -81,7 +81,25 @@ func resourceServiceConfigRead(_ context.Context, d *schema.ResourceData, meta a
 }
 
 func resourceServiceConfigDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	d.SetId("")
+	APIClient := meta.(*goneuvector.Client)
+
+	servicesRaw := d.Get("services").([]any)
+	services, err := helper.FromSlice[string](servicesRaw)
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	body := goneuvector.PatchServiceConfigBody{
+		Services: services,
+		NotScored: new(bool),
+	}
+
+	*body.NotScored = false
+
+	if err := APIClient.PatchServiceConfig(body); err != nil {
+		return diag.FromErr(err)
+	}
 
 	return nil
 }
