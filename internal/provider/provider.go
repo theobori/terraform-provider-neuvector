@@ -59,6 +59,7 @@ func Provider() *schema.Provider {
 			"neuvector_registry_names": neuvector.DataSourceRegistryNames(),
 			"neuvector_policy_ids":     neuvector.DataSourcePolicyIDs(),
 			"neuvector_eula":           neuvector.DataSourceEULA(),
+			"neuvector_group_services": neuvector.DataSourceGroupServices(),
 		},
 	}
 

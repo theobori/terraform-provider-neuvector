@@ -82,6 +82,6 @@ func resourceServiceConfigRead(_ context.Context, d *schema.ResourceData, meta a
 
 func resourceServiceConfigDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	d.SetId("")
-	
+
 	return nil
 }
