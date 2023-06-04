@@ -29,6 +29,7 @@ var resourceUserSchema = map[string]*schema.Schema{
 	"password": {
 		Type:        schema.TypeString,
 		Description: "The password of the user.",
+		Sensitive:   true,
 		Optional:    true,
 	},
 	"email": {
@@ -136,9 +137,15 @@ func resourceUserRead(_ context.Context, d *schema.ResourceData, meta any) diag.
 		return diag.FromErr(err)
 	}
 
-	if err := helper.ResourceFromStruct(user.User, d); err != nil {
+	// Because NeuVector hides the password and we do not want
+	// changes in the Terraform state.
+	password := d.Get("password").(string)
+
+	if err := helper.TfFromStruct(user.User, d, true); err != nil {
 		return diag.FromErr(err)
 	}
+
+	d.Set("password", password)
 
 	return nil
 }

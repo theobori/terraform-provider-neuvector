@@ -91,7 +91,7 @@ func resourceServiceConfigDelete(_ context.Context, d *schema.ResourceData, meta
 	}
 
 	body := goneuvector.PatchServiceConfigBody{
-		Services: services,
+		Services:  services,
 		NotScored: new(bool),
 	}
 

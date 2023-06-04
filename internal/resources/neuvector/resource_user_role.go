@@ -77,15 +77,21 @@ func getPermissions(permissions []goneuvector.UserRolePermission) []map[string]a
 	return ret
 }
 
-func resourceUserRoleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	APIClient := meta.(*goneuvector.Client)
-
-	body := helper.FromSchemas[goneuvector.CreateUserRoleBody](resourceUserRoleSchema, d)
+func readUserRole(d *schema.ResourceData) goneuvector.CreateUserRoleBody {
+	role := helper.FromSchemas[goneuvector.CreateUserRoleBody](resourceUserRoleSchema, d)
 
 	permissionsRaw := d.Get("permission").(*schema.Set).List()
 	permissions := helper.FromTypeSetDefault[goneuvector.UserRolePermission](permissionsRaw)
 
-	body.Permissions = permissions
+	role.Permissions = permissions
+
+	return role
+}
+
+func resourceUserRoleCreate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	APIClient := meta.(*goneuvector.Client)
+
+	body := readUserRole(d)
 
 	if err := APIClient.CreateUserRole(body); err != nil {
 		return diag.FromErr(err)
@@ -93,10 +99,22 @@ func resourceUserRoleCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	d.SetId(body.Name)
 
-	return resourceUserRoleRead(ctx, d, meta)
+	return nil
 }
 
 func resourceUserRoleUpdate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	if d.HasChange("name") {
+		return diag.Errorf("You are not allowed to change the role name.")
+	}
+	
+	APIClient := meta.(*goneuvector.Client)
+
+	body := readUserRole(d)
+
+	if err := APIClient.PatchUserRole(body.Name, body); err != nil {
+		return diag.FromErr(err)
+	}
+
 	return nil
 }
 

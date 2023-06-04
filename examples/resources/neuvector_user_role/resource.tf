@@ -1,4 +1,4 @@
-resource "neuvector_user_role" "roletest" {
+resource "neuvector_user_role" "test" {
   name = "roletest"
 
   permission {

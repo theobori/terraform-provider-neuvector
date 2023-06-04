@@ -29,10 +29,12 @@ var resourceServiceSchema = map[string]*schema.Schema{
 	"policy_mode": {
 		Type:     schema.TypeString,
 		Optional: true,
+		Default: "Discover",
 	},
 	"baseline_profile": {
 		Type:     schema.TypeString,
 		Optional: true,
+		Default: "zero-drift",
 	},
 	"not_scored": {
 		Type:     schema.TypeBool,
@@ -47,12 +49,26 @@ func ResourceService() *schema.Resource {
 		ReadContext:   resourceServiceRead,
 		DeleteContext: resourceServiceDelete,
 		UpdateContext: resourceServiceUpdate,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 
 		Schema: resourceServiceSchema,
 	}
 }
 
-func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resolveGroupName(d *schema.ResourceData) string {
+	domain := d.Get("domain").(string)
+	name := "nv." + d.Id()
+
+	if domain != "" {
+		name += "." + domain
+	}
+
+	return name
+}
+
+func resourceServiceCreate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	APIClient := meta.(*goneuvector.Client)
 
 	body := helper.FromSchemas[goneuvector.CreateServiceBody](
@@ -66,7 +82,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	d.SetId(body.Name)
 
-	return resourceServiceRead(ctx, d, meta)
+	return nil
 }
 
 func resourceServiceUpdate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -95,20 +111,32 @@ func resourceServiceUpdate(_ context.Context, d *schema.ResourceData, meta any) 
 }
 
 func resourceServiceRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	APIClient := meta.(*goneuvector.Client)
+
+	s, err := APIClient.GetService(d.Id())
+
+	if err != nil {
+		return diag.FromErr(err)
+	}
+
+	// Because in the NeuVector source code, the group comment
+	// is not reported into the service. So, we temporarily
+	// store the comment.
+	comment := d.Get("comment").(string)
+
+	if err := helper.TfFromStruct(s.Service, d, true); err != nil {
+		return diag.FromErr(err)
+	}
+
+	d.Set("comment", comment)
+
 	return nil
 }
 
 func resourceServiceDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	APIClient := meta.(*goneuvector.Client)
 
-	domain := d.Get("domain").(string)
-	name := "nv." + d.Id()
-
-	if domain != "" {
-		name += "." + domain
-	}
-
-	if err := APIClient.DeleteGroup(name); err != nil {
+	if err := APIClient.DeleteGroup(resolveGroupName(d)); err != nil {
 		return diag.FromErr(err)
 	}
 

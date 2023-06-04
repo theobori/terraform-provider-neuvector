@@ -197,12 +197,15 @@ func resourceRegistryRead(_ context.Context, d *schema.ResourceData, meta any) d
 		return diag.FromErr(err)
 	}
 
+	password := d.Get("password").(string)
+
 	// Forcing field overriding to permits terraform import
 	if err = helper.TfFromStruct(r.Registry, d, true); err != nil {
 		return diag.FromErr(err)
 	}
 
 	d.Set("filters", r.Registry.Filters)
+	d.Set("password", password)
 
 	return nil
 }
