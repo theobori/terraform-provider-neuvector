@@ -1,0 +1,1 @@
+terraform import neuvector_user.name {{username}}

@@ -39,7 +39,7 @@ resource "neuvector_user" "test" {
 - `email` (String) The email address of the user.
 - `locale` (String) The locale setting for the user.
 - `modify_password` (Boolean) Flag indicating if the user can modify the password.
-- `password` (String) The password of the user.
+- `password` (String, Sensitive) The password of the user.
 - `server` (String) The server associated with the user.
 - `timeout` (Number) The timeout value for the user session.
 
@@ -47,4 +47,10 @@ resource "neuvector_user" "test" {
 
 - `id` (String) The ID of this resource.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+terraform import neuvector_user.name {{username}}
+```

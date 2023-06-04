@@ -13,7 +13,7 @@ description: |-
 ## Example Usage
 
 ```terraform
-resource "neuvector_user_role" "roletest" {
+resource "neuvector_user_role" "test" {
   name = "roletest"
 
   permission {
@@ -49,4 +49,10 @@ Required:
 - `read` (Boolean) Flag indicating if the role has the read permission.
 - `write` (Boolean) Flag indicating if the role has the write permission.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+terraform import neuvector_user_role.name {{role_name}}
+```

@@ -1,0 +1,1 @@
+terraform import neuvector_service.name {{service_name}}

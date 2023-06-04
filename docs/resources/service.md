@@ -39,4 +39,10 @@ resource "neuvector_service" "test" {
 
 - `id` (String) The ID of this resource.
 
+## Import
 
+Import is supported using the following syntax:
+
+```shell
+terraform import neuvector_service.name {{service_name}}
+```

@@ -1,0 +1,1 @@
+terraform import neuvector_user_role.name {{role_name}}
