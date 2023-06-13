@@ -265,6 +265,8 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		Rules: readPolicyRules(rulesRaw),
 	}
 
+	APIClient.WithContext(ctx)
+
 	// Patching policy handling the configuration scope
 	err = patchPolicy(
 		APIClient,
@@ -302,12 +304,14 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	return nil
 }
 
-func resourcePolicyRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var rules []map[string]any
 
 	APIClient := meta.(*goneuvector.Client)
 
-	policies, err := APIClient.GetPolicies()
+	policies, err := APIClient.
+		WithContext(ctx).
+		GetPolicies()
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -364,7 +368,7 @@ func resourcePolicyDelete(_ context.Context, d *schema.ResourceData, meta any) d
 	return nil
 }
 
-func resourcePolicyImport(_ context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+func resourcePolicyImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	APIClient := meta.(*goneuvector.Client)
 
 	ruleID, err := strconv.Atoi(d.Id())
@@ -373,7 +377,9 @@ func resourcePolicyImport(_ context.Context, d *schema.ResourceData, meta any) (
 		return nil, err
 	}
 
-	p, err := APIClient.GetPolicy(ruleID)
+	p, err := APIClient.
+		WithContext(ctx).
+		GetPolicy(ruleID)
 
 	if err != nil {
 		return nil, err

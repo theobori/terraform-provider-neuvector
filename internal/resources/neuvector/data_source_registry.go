@@ -184,11 +184,13 @@ func DataSourceRegistry() *schema.Resource {
 	}
 }
 
-func dataSourceRegistryRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func dataSourceRegistryRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	APIClient := meta.(*goneuvector.Client)
 
 	name := d.Get("name").(string)
-	registrySummary, err := APIClient.GetRegistry(name)
+	registrySummary, err := APIClient.
+		WithContext(ctx).
+		GetRegistry(name)
 
 	if err != nil {
 		return diag.FromErr(err)

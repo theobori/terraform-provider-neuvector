@@ -31,12 +31,14 @@ func DataSourceRegistryNames() *schema.Resource {
 	}
 }
 
-func dataSourceRegistryNamesRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func dataSourceRegistryNamesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var names []string
 
 	APIClient := meta.(*goneuvector.Client)
 
-	registriesSummaries, err := APIClient.GetRegistries()
+	registriesSummaries, err := APIClient.
+		WithContext(ctx).
+		GetRegistries()
 
 	if err != nil {
 		return diag.FromErr(err)

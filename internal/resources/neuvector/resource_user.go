@@ -115,7 +115,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta any) d
 
 	// TODO: Supports role domains
 
-	if err := APIClient.CreateUser(body); err != nil {
+	if err := APIClient.WithContext(ctx).CreateUser(body); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -128,10 +128,12 @@ func resourceUserUpdate(_ context.Context, d *schema.ResourceData, meta any) dia
 	return nil
 }
 
-func resourceUserRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	APIClient := meta.(*goneuvector.Client)
 
-	user, err := APIClient.GetUser(d.Id())
+	user, err := APIClient.
+		WithContext(ctx).
+		GetUser(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -150,10 +152,10 @@ func resourceUserRead(_ context.Context, d *schema.ResourceData, meta any) diag.
 	return nil
 }
 
-func resourceUserDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	APIClient := meta.(*goneuvector.Client)
 
-	if err := APIClient.DeleteUser(d.Id()); err != nil {
+	if err := APIClient.WithContext(ctx).DeleteUser(d.Id()); err != nil {
 		return diag.FromErr(err)
 	}
 

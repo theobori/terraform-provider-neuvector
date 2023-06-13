@@ -95,7 +95,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	group := readGroup(d)
 
-	if err := APIClient.CreateGroup(*group); err != nil {
+	if err := APIClient.WithContext(ctx).CreateGroup(*group); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -113,7 +113,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	group := readGroup(d)
 
-	if err := APIClient.PatchGroup(group.Name, *group); err != nil {
+	if err := APIClient.WithContext(ctx).PatchGroup(group.Name, *group); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -143,11 +143,13 @@ func resourceGroupRead(_ context.Context, d *schema.ResourceData, meta any) diag
 	return nil
 }
 
-func resourceGroupDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	APIClient := meta.(*goneuvector.Client)
 
-	err := APIClient.DeleteGroup(
-		d.Get("name").(string),
+	err := APIClient.
+		WithContext(ctx).
+		DeleteGroup(
+			d.Get("name").(string),
 	)
 
 	if err != nil {

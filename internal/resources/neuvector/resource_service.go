@@ -110,10 +110,12 @@ func resourceServiceUpdate(_ context.Context, d *schema.ResourceData, meta any) 
 	return nil
 }
 
-func resourceServiceRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	APIClient := meta.(*goneuvector.Client)
 
-	s, err := APIClient.GetService(d.Id())
+	s, err := APIClient.
+		WithContext(ctx).
+		GetService(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -133,10 +135,14 @@ func resourceServiceRead(_ context.Context, d *schema.ResourceData, meta any) di
 	return nil
 }
 
-func resourceServiceDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	APIClient := meta.(*goneuvector.Client)
 
-	if err := APIClient.DeleteGroup(resolveGroupName(d)); err != nil {
+	err := APIClient.
+		WithContext(ctx).
+		DeleteGroup(resolveGroupName(d))
+
+	if err != nil {
 		return diag.FromErr(err)
 	}
 

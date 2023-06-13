@@ -32,13 +32,15 @@ func DataSourceGroupServices() *schema.Resource {
 	}
 }
 
-func dataSourceGroupServicesRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func dataSourceGroupServicesRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var services []string
 
 	APIClient := meta.(*goneuvector.Client)
 
 	name := d.Get("name").(string)
-	group, err := APIClient.GetGroup(name)
+	group, err := APIClient.
+		WithContext(ctx).
+		GetGroup(name)
 
 	if err != nil {
 		return diag.FromErr(err)

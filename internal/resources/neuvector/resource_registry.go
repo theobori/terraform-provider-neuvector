@@ -130,7 +130,7 @@ func readRegistry(d *schema.ResourceData) (*goneuvector.CreateRegistryBody, erro
 	return &ret, nil
 }
 
-func resourceRegistryCreate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceRegistryCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	APIClient := meta.(*goneuvector.Client)
 
 	body, err := readRegistry(d)
@@ -139,7 +139,7 @@ func resourceRegistryCreate(_ context.Context, d *schema.ResourceData, meta any)
 		return diag.FromErr(err)
 	}
 
-	if err := APIClient.CreateRegistry(*body); err != nil {
+	if err := APIClient.WithContext(ctx).CreateRegistry(*body); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -166,7 +166,7 @@ func resourceRegistryCreate(_ context.Context, d *schema.ResourceData, meta any)
 	return nil
 }
 
-func resourceRegistryUpdate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceRegistryUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	APIClient := meta.(*goneuvector.Client)
 
 	if d.HasChanges("name", "registry_type") {
@@ -179,19 +179,21 @@ func resourceRegistryUpdate(_ context.Context, d *schema.ResourceData, meta any)
 		return diag.FromErr(err)
 	}
 
-	if err := APIClient.PatchRegistry(*body, body.Name); err != nil {
+	if err := APIClient.WithContext(ctx).PatchRegistry(*body, body.Name); err != nil {
 		return diag.FromErr(err)
 	}
 
 	return nil
 }
 
-func resourceRegistryRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceRegistryRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var err error
 
 	APIClient := meta.(*goneuvector.Client)
 
-	r, err := APIClient.GetRegistry(d.Id())
+	r, err := APIClient.
+		WithContext(ctx).
+		GetRegistry(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -210,10 +212,10 @@ func resourceRegistryRead(_ context.Context, d *schema.ResourceData, meta any) d
 	return nil
 }
 
-func resourceRegistryDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceRegistryDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	APIClient := meta.(*goneuvector.Client)
 
-	if err := APIClient.DeleteRegistry(d.Id()); err != nil {
+	if err := APIClient.WithContext(ctx).DeleteRegistry(d.Id()); err != nil {
 		return diag.FromErr(err)
 	}
 

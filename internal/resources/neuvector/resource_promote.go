@@ -58,7 +58,7 @@ func resourcePromoteCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 	body.MasterRestInfo = masterRestInfo
 
-	if err := APIClient.Promote(body); err != nil {
+	if err := APIClient.WithContext(ctx).Promote(body); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -75,10 +75,10 @@ func resourcePromoteRead(_ context.Context, d *schema.ResourceData, meta any) di
 	return nil
 }
 
-func resourcePromoteDelete(_ context.Context, _ *schema.ResourceData, meta any) diag.Diagnostics {
+func resourcePromoteDelete(ctx context.Context, _ *schema.ResourceData, meta any) diag.Diagnostics {
 	APIClient := meta.(*goneuvector.Client)
 
-	if err := APIClient.Demote(); err != nil {
+	if err := APIClient.WithContext(ctx).Demote(); err != nil {
 		return diag.FromErr(err)
 	}
 

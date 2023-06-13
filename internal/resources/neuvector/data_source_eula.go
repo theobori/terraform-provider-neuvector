@@ -25,10 +25,12 @@ func DataSourceEULA() *schema.Resource {
 	}
 }
 
-func dataSourceEULARead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func dataSourceEULARead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	APIClient := meta.(*goneuvector.Client)
 
-	eula, err := APIClient.GetEULA()
+	eula, err := APIClient.
+		WithContext(ctx).
+		GetEULA()
 
 	if err != nil {
 		return diag.FromErr(err)

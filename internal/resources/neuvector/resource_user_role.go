@@ -88,12 +88,12 @@ func readUserRole(d *schema.ResourceData) goneuvector.CreateUserRoleBody {
 	return role
 }
 
-func resourceUserRoleCreate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceUserRoleCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	APIClient := meta.(*goneuvector.Client)
 
 	body := readUserRole(d)
 
-	if err := APIClient.CreateUserRole(body); err != nil {
+	if err := APIClient.WithContext(ctx).CreateUserRole(body); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -102,7 +102,7 @@ func resourceUserRoleCreate(_ context.Context, d *schema.ResourceData, meta any)
 	return nil
 }
 
-func resourceUserRoleUpdate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceUserRoleUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	if d.HasChange("name") {
 		return diag.Errorf("You are not allowed to change the role name.")
 	}
@@ -111,17 +111,19 @@ func resourceUserRoleUpdate(_ context.Context, d *schema.ResourceData, meta any)
 
 	body := readUserRole(d)
 
-	if err := APIClient.PatchUserRole(body.Name, body); err != nil {
+	if err := APIClient.WithContext(ctx).PatchUserRole(body.Name, body); err != nil {
 		return diag.FromErr(err)
 	}
 
 	return nil
 }
 
-func resourceUserRoleRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceUserRoleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	APIClient := meta.(*goneuvector.Client)
 
-	roleFull, err := APIClient.GetUserRole(d.Id())
+	roleFull, err := APIClient.
+		WithContext(ctx).
+		GetUserRole(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -138,10 +140,10 @@ func resourceUserRoleRead(_ context.Context, d *schema.ResourceData, meta any) d
 	return nil
 }
 
-func resourceUserRoleDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceUserRoleDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	APIClient := meta.(*goneuvector.Client)
 
-	if err := APIClient.DeleteUserRole(d.Id()); err != nil {
+	if err := APIClient.WithContext(ctx).DeleteUserRole(d.Id()); err != nil {
 		return diag.FromErr(err)
 	}
 

@@ -6,7 +6,7 @@ require (
 	github.com/hashicorp/go-uuid v1.0.3
 	github.com/hashicorp/terraform-plugin-docs v0.14.1
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.26.1
-	github.com/theobori/go-neuvector v0.0.0-20230601221153-733f8f469c11
+	github.com/theobori/go-neuvector v0.0.0-20230613115838-e68300cd24c2
 )
 
 require (

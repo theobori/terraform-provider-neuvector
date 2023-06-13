@@ -116,7 +116,9 @@ func resourceAdmissionRuleCreate(ctx context.Context, d *schema.ResourceData, me
 
 	body.Criteria = criterias
 
-	rule, err := APIClient.CreateAdmissionRule(body)
+	rule, err := APIClient.
+		WithContext(ctx).
+		CreateAdmissionRule(body)
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -144,7 +146,7 @@ func getCriteria(criterias []goneuvector.AdmissionRuleCriterion) []map[string]an
 	return ret
 }
 
-func resourceAdmissionRuleRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceAdmissionRuleRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	APIClient := meta.(*goneuvector.Client)
 
 	id, err := strconv.Atoi(d.Id())
@@ -153,7 +155,9 @@ func resourceAdmissionRuleRead(_ context.Context, d *schema.ResourceData, meta a
 		return diag.FromErr(err)
 	}
 
-	adm, err := APIClient.GetAdmissionRule(id)
+	adm, err := APIClient.
+		WithContext(ctx).
+		GetAdmissionRule(id)
 
 	if err != nil {
 		d.SetId("")
@@ -190,7 +194,7 @@ func resourceAdmissionRuleUpdate(ctx context.Context, d *schema.ResourceData, me
 	return resourceAdmissionRuleCreate(ctx, d, meta)
 }
 
-func resourceAdmissionRuleDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceAdmissionRuleDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	APIClient := meta.(*goneuvector.Client)
 
 	var err error
@@ -201,7 +205,7 @@ func resourceAdmissionRuleDelete(_ context.Context, d *schema.ResourceData, meta
 		return diag.FromErr(err)
 	}
 
-	if err := APIClient.DeleteAdmissionRule(id); err != nil {
+	if err := APIClient.WithContext(ctx).DeleteAdmissionRule(id); err != nil {
 		return diag.FromErr(err)
 	}
 

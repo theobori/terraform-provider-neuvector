@@ -77,12 +77,14 @@ func DataSourcePolicyIDs() *schema.Resource {
 	}
 }
 
-func dataSourcePolicyIDsRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func dataSourcePolicyIDsRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	APIClient := meta.(*goneuvector.Client)
 
 	var ids []int
 
-	policies, err := APIClient.GetPolicies()
+	policies, err := APIClient.
+		WithContext(ctx).
+		GetPolicies()
 
 	if err != nil {
 		return diag.FromErr(err)

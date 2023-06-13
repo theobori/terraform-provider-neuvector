@@ -41,7 +41,7 @@ func resourceEULACreate(ctx context.Context, d *schema.ResourceData, meta any) d
 		d,
 	)
 
-	if err := APIClient.AcceptEULA(eula); err != nil {
+	if err := APIClient.WithContext(ctx).AcceptEULA(eula); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -64,17 +64,19 @@ func resourceEULAUpdate(ctx context.Context, d *schema.ResourceData, meta any) d
 		d,
 	)
 
-	if err := APIClient.AcceptEULA(eula); err != nil {
+	if err := APIClient.WithContext(ctx).AcceptEULA(eula); err != nil {
 		return diag.FromErr(err)
 	}
 
 	return nil
 }
 
-func resourceEULARead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceEULARead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	APIClient := meta.(*goneuvector.Client)
 
-	eula, err := APIClient.GetEULA()
+	eula, err := APIClient.
+		WithContext(ctx).	
+		GetEULA()
 
 	if err != nil {
 		return diag.FromErr(err)
@@ -85,7 +87,7 @@ func resourceEULARead(_ context.Context, d *schema.ResourceData, meta any) diag.
 	return nil
 }
 
-func resourceEULADelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceEULADelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	APIClient := meta.(*goneuvector.Client)
 
 	eula := helper.FromSchemas[goneuvector.EULA](
@@ -93,10 +95,12 @@ func resourceEULADelete(_ context.Context, d *schema.ResourceData, meta any) dia
 		d,
 	)
 
-	err := APIClient.AcceptEULA(
-		goneuvector.EULA{
-			Accepted: !eula.Accepted,
-		},
+	err := APIClient.
+		WithContext(ctx).
+		AcceptEULA(
+			goneuvector.EULA{
+				Accepted: !eula.Accepted,
+			},
 	)
 
 	if err != nil {

@@ -61,7 +61,7 @@ func resourceServiceConfigCreateOrUpdate(ctx context.Context, d *schema.Resource
 
 	body.Services = services
 
-	if err := APIClient.PatchServiceConfig(body); err != nil {
+	if err := APIClient.WithContext(ctx).PatchServiceConfig(body); err != nil {
 		return diag.FromErr(err)
 	}
 
@@ -80,7 +80,7 @@ func resourceServiceConfigRead(_ context.Context, d *schema.ResourceData, meta a
 	return nil
 }
 
-func resourceServiceConfigDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceServiceConfigDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	APIClient := meta.(*goneuvector.Client)
 
 	servicesRaw := d.Get("services").([]any)
@@ -97,7 +97,7 @@ func resourceServiceConfigDelete(_ context.Context, d *schema.ResourceData, meta
 
 	*body.NotScored = false
 
-	if err := APIClient.PatchServiceConfig(body); err != nil {
+	if err := APIClient.WithContext(ctx).PatchServiceConfig(body); err != nil {
 		return diag.FromErr(err)
 	}
 
