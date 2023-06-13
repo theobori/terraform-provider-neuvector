@@ -1,6 +1,6 @@
 # Provider metadata and versionning
 PROVIDER = neuvector
-VERSION = 0.4.2
+VERSION = 0.4.3
 RELEASE_VERSION ?= v$(VERSION)
 
 # Terraform metadata for installation

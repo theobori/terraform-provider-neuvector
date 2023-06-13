@@ -29,12 +29,12 @@ var resourceServiceSchema = map[string]*schema.Schema{
 	"policy_mode": {
 		Type:     schema.TypeString,
 		Optional: true,
-		Default: "Discover",
+		Default:  "Discover",
 	},
 	"baseline_profile": {
 		Type:     schema.TypeString,
 		Optional: true,
-		Default: "zero-drift",
+		Default:  "zero-drift",
 	},
 	"not_scored": {
 		Type:     schema.TypeBool,

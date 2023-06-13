@@ -75,7 +75,7 @@ func resourceEULARead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	APIClient := meta.(*goneuvector.Client)
 
 	eula, err := APIClient.
-		WithContext(ctx).	
+		WithContext(ctx).
 		GetEULA()
 
 	if err != nil {
@@ -101,7 +101,7 @@ func resourceEULADelete(ctx context.Context, d *schema.ResourceData, meta any) d
 			goneuvector.EULA{
 				Accepted: !eula.Accepted,
 			},
-	)
+		)
 
 	if err != nil {
 		return diag.FromErr(err)

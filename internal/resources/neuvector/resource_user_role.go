@@ -106,7 +106,7 @@ func resourceUserRoleUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	if d.HasChange("name") {
 		return diag.Errorf("You are not allowed to change the role name.")
 	}
-	
+
 	APIClient := meta.(*goneuvector.Client)
 
 	body := readUserRole(d)

@@ -150,7 +150,7 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 		WithContext(ctx).
 		DeleteGroup(
 			d.Get("name").(string),
-	)
+		)
 
 	if err != nil {
 		return diag.FromErr(err)

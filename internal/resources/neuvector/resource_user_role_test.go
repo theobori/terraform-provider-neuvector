@@ -19,9 +19,9 @@ func TestAccResourceUserRole(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            "neuvector_user_role.test",
-				ImportState:             true,
-				ImportStateVerify:       true,
+				ResourceName:      "neuvector_user_role.test",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

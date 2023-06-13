@@ -7,15 +7,15 @@ import (
 	"github.com/theobori/terraform-provider-neuvector/internal/testutils"
 )
 
-func TestAccDataSourceGroupServices(t *testing.T) {
+func TestAccDataSourceGroupMetadata(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProviderFactories: testutils.ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testutils.TestAccExampleFile(t, "data-sources/neuvector_group_services/data-source.tf"),
+				Config: testutils.TestAccExampleFile(t, "data-sources/neuvector_group_metadata/data-source.tf"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.neuvector_group_services.test", "name"),
-					resource.TestCheckResourceAttrSet("data.neuvector_group_services.test", "services.#"),
+					resource.TestCheckResourceAttrSet("data.neuvector_group_metadata.test", "name"),
+					resource.TestCheckResourceAttrSet("data.neuvector_group_metadata.test", "services.#"),
 				),
 			},
 		},
