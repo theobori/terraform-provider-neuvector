@@ -68,7 +68,7 @@ func resolveGroupName(d *schema.ResourceData) string {
 	return name
 }
 
-func resourceServiceCreate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	APIClient := meta.(*goneuvector.Client)
 
 	body := helper.FromSchemas[goneuvector.CreateServiceBody](
@@ -85,7 +85,7 @@ func resourceServiceCreate(_ context.Context, d *schema.ResourceData, meta any) 
 	return nil
 }
 
-func resourceServiceUpdate(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	if !d.HasChanges(
 		"policy_mode",
 		"baseline_profile",
@@ -103,7 +103,7 @@ func resourceServiceUpdate(_ context.Context, d *schema.ResourceData, meta any) 
 
 	body.Services = []string{d.Id()}
 
-	if err := APIClient.PatchServiceConfig(body); err != nil {
+	if err := APIClient.WithContext(ctx).PatchServiceConfig(body); err != nil {
 		return diag.FromErr(err)
 	}
 

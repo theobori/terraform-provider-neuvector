@@ -346,7 +346,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	return nil
 }
 
-func resourcePolicyDelete(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	APIClient := meta.(*goneuvector.Client)
 
 	params := GetScopeChanges(d.Get("rules_scope").(string))
@@ -358,12 +358,14 @@ func resourcePolicyDelete(_ context.Context, d *schema.ResourceData, meta any) d
 		return diag.FromErr(err)
 	}
 
-	APIClient.PatchPolicy(
-		goneuvector.PatchPolicyBody{
-			Delete: delete,
-		},
-		params.IsFed,
-	)
+	APIClient.
+		WithContext(ctx).
+		PatchPolicy(
+			goneuvector.PatchPolicyBody{
+				Delete: delete,
+			},
+			params.IsFed,
+		)
 
 	return nil
 }

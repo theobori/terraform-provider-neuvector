@@ -120,10 +120,12 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 	return nil
 }
 
-func resourceGroupRead(_ context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	APIClient := meta.(*goneuvector.Client)
 
-	groupData, err := APIClient.GetGroup(d.Id())
+	groupData, err := APIClient.
+		WithContext(ctx).
+		GetGroup(d.Id())
 
 	if err != nil {
 		return diag.FromErr(err)
